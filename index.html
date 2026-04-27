@@ -1,0 +1,883 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>SiHAdir — Absensi</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+<style>
+/* ── DESIGN TOKENS (sama persis dengan Index.html) ── */
+:root {
+  --primary:       #0f4c8a;
+  --primary-light: #1a6bbf;
+  --primary-dark:  #0a3366;
+  --accent:        #00b4d8;
+  --accent2:       #06d6a0;
+  --warning:       #ffd166;
+  --danger:        #ef476f;
+  --success:       #06d6a0;
+  --bg:            #f0f4fa;
+  --card:          #ffffff;
+  --sidebar:       #0a2444;
+  --text:          #1a2744;
+  --text-muted:    #6b7a99;
+  --border:        #e0e8f5;
+  --shadow:        0 4px 24px rgba(15,76,138,0.10);
+  --shadow-lg:     0 8px 40px rgba(15,76,138,0.16);
+  --radius:        14px;
+  --radius-sm:     8px;
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+
+body {
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background: linear-gradient(135deg, #0a2444 0%, #0f4c8a 55%, #1a6bbf 100%);
+  color: var(--text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding: 24px 16px 40px;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Dekorasi lingkaran latar */
+body::before {
+  content:'';
+  position:fixed; top:-120px; right:-120px;
+  width:480px; height:480px; border-radius:50%;
+  background:radial-gradient(circle,rgba(0,180,216,0.15) 0%,transparent 70%);
+  pointer-events:none;
+}
+body::after {
+  content:'';
+  position:fixed; bottom:-100px; left:-80px;
+  width:380px; height:380px; border-radius:50%;
+  background:radial-gradient(circle,rgba(6,214,160,0.10) 0%,transparent 70%);
+  pointer-events:none;
+}
+
+/* ── HEADER ── */
+.app-header {
+  width:100%; max-width:480px;
+  display:flex; align-items:center; justify-content:space-between;
+  margin-bottom:24px;
+  position:relative; z-index:1;
+}
+.header-logo { display:flex; align-items:center; gap:12px; }
+.logo-box {
+  width:44px; height:44px; border-radius:12px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  display:flex; align-items:center; justify-content:center;
+  font-size:20px; color:white;
+  box-shadow:0 6px 18px rgba(0,180,216,0.4);
+}
+.header-logo .logo-text { font-size:20px; font-weight:800; color:white; }
+.header-logo .logo-sub  { font-size:11px; color:rgba(255,255,255,0.55); }
+.header-user {
+  display:flex; align-items:center; gap:8px;
+  background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.12);
+  border-radius:100px; padding:6px 14px 6px 8px;
+  cursor:pointer; transition:all 0.2s;
+}
+.header-user:hover { background:rgba(255,255,255,0.14); }
+.user-ava {
+  width:30px; height:30px; border-radius:50%;
+  background:linear-gradient(135deg,var(--primary-light),var(--accent));
+  display:flex; align-items:center; justify-content:center;
+  font-size:13px; font-weight:700; color:white;
+  overflow:hidden; flex-shrink:0;
+}
+.user-ava img { width:100%; height:100%; object-fit:cover; }
+.header-user .user-name { font-size:12px; font-weight:600; color:white; }
+.header-user .user-role {
+  font-size:10px; color:var(--accent);
+  background:rgba(0,180,216,0.18); padding:2px 7px;
+  border-radius:4px; font-weight:700;
+}
+
+/* ── CLOCK CARD ── */
+.clock-card {
+  width:100%; max-width:480px;
+  background:rgba(255,255,255,0.07); backdrop-filter:blur(20px);
+  border:1px solid rgba(255,255,255,0.12);
+  border-radius:20px; padding:24px 28px 20px;
+  margin-bottom:16px; position:relative; z-index:1;
+  overflow:hidden;
+}
+.clock-card::before {
+  content:'';
+  position:absolute; top:-40px; right:-40px;
+  width:180px; height:180px; border-radius:50%;
+  background:rgba(255,255,255,0.04); pointer-events:none;
+}
+.clock-time {
+  font-size:52px; font-weight:800; color:white;
+  font-family:'JetBrains Mono',monospace; letter-spacing:-2px; line-height:1;
+}
+.clock-date { color:rgba(255,255,255,0.6); font-size:14px; margin-top:6px; margin-bottom:20px; }
+.absen-btns { display:flex; gap:12px; flex-wrap:wrap; }
+.btn-absen {
+  flex:1; min-width:140px;
+  display:flex; align-items:center; justify-content:center; gap:10px;
+  padding:14px 20px; border-radius:12px;
+  font-size:15px; font-weight:700; cursor:pointer; border:none;
+  font-family:inherit; transition:all 0.2s;
+}
+.btn-absen-masuk { background:var(--accent2); color:white; }
+.btn-absen-masuk:hover:not(:disabled) { filter:brightness(1.1); transform:translateY(-1px); }
+.btn-absen-pulang { background:var(--warning); color:var(--text); }
+.btn-absen-pulang:hover:not(:disabled) { filter:brightness(1.05); transform:translateY(-1px); }
+.btn-absen:disabled { opacity:0.4; cursor:not-allowed; transform:none; }
+
+/* ── STATUS HARI INI ── */
+.status-card {
+  width:100%; max-width:480px;
+  background:white; border-radius:var(--radius);
+  box-shadow:var(--shadow); border:1px solid var(--border);
+  margin-bottom:16px; position:relative; z-index:1;
+  overflow:hidden;
+}
+.status-card-header {
+  padding:16px 20px 12px;
+  border-bottom:1px solid var(--border);
+  font-weight:700; font-size:14px; display:flex; align-items:center; gap:8px;
+}
+.status-card-body { padding:16px 20px; }
+.status-row {
+  display:flex; align-items:center; gap:12px; padding:12px;
+  border-radius:10px; margin-bottom:10px;
+}
+.status-row:last-child { margin-bottom:0; }
+.status-row.masuk  { background:rgba(6,214,160,0.08); }
+.status-row.pulang { background:rgba(15,76,138,0.06); }
+.status-row.empty  { background:rgba(239,71,111,0.06); }
+.status-icon { font-size:20px; }
+.status-label { font-size:12px; font-weight:600; color:var(--text-muted); }
+.status-value { font-size:16px; font-weight:800; }
+
+/* ── KAMERA SECTION (mirip modal di Index.html) ── */
+.camera-section {
+  width:100%; max-width:480px;
+  background:white; border-radius:var(--radius);
+  box-shadow:var(--shadow); border:1px solid var(--border);
+  margin-bottom:16px; position:relative; z-index:1;
+  display:none; /* ditampilkan saat tombol absen diklik */
+  overflow:hidden;
+}
+.camera-section.show { display:block; }
+.camera-header {
+  padding:18px 20px 14px;
+  border-bottom:1px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between;
+}
+.camera-header h3 { font-size:16px; font-weight:700; }
+.btn-close-cam {
+  width:32px; height:32px; border-radius:50%;
+  background:var(--bg); border:none; cursor:pointer;
+  display:flex; align-items:center; justify-content:center;
+  color:var(--text-muted); font-size:16px; transition:all 0.2s;
+}
+.btn-close-cam:hover { background:var(--border); }
+.camera-body { padding:20px; }
+
+/* Tampilan kamera persis sama dengan modal di Index.html */
+.camera-wrap {
+  position:relative; background:#000; border-radius:12px;
+  overflow:hidden; aspect-ratio:4/3;
+}
+#cameraVideo { width:100%; height:100%; object-fit:cover; display:block; }
+.camera-overlay {
+  position:absolute; inset:0;
+  display:flex; align-items:center; justify-content:center;
+}
+.face-guide {
+  width:60%; aspect-ratio:1;
+  border:3px solid rgba(255,255,255,0.6); border-radius:50%;
+}
+.captured-photo { width:100%; border-radius:12px; display:none; }
+
+.cam-actions {
+  display:flex; gap:10px; margin-top:14px; justify-content:center;
+}
+
+.lokasi-status {
+  margin-top:16px; padding:12px 16px;
+  background:var(--bg); border-radius:var(--radius-sm);
+  font-size:12px; color:var(--text-muted);
+}
+
+.ket-group { margin-top:14px; }
+.ket-group label { display:block; font-size:13px; font-weight:600; color:var(--text); margin-bottom:7px; }
+.ket-input {
+  width:100%; padding:10px 14px; border:1.5px solid var(--border);
+  border-radius:var(--radius-sm); font-size:14px; font-family:inherit;
+  color:var(--text); background:white; transition:all 0.2s;
+}
+.ket-input:focus { outline:none; border-color:var(--primary-light); box-shadow:0 0 0 3px rgba(15,76,138,0.1); }
+
+.camera-footer {
+  padding:16px 20px 20px;
+  border-top:1px solid var(--border);
+  display:flex; gap:12px; justify-content:flex-end;
+}
+
+/* ── BUTTONS ── */
+.btn {
+  display:inline-flex; align-items:center; gap:8px;
+  padding:10px 18px; border-radius:var(--radius-sm);
+  font-size:13px; font-weight:600; cursor:pointer; border:none;
+  font-family:inherit; transition:all 0.2s; white-space:nowrap;
+}
+.btn-primary { background:var(--primary); color:white; }
+.btn-primary:hover:not(:disabled) { background:var(--primary-light); transform:translateY(-1px); }
+.btn-outline { background:transparent; color:var(--primary); border:1.5px solid var(--primary); }
+.btn-outline:hover { background:var(--primary); color:white; }
+.btn:disabled { opacity:0.5; cursor:not-allowed; }
+
+/* ── BADGE ── */
+.badge {
+  display:inline-flex; align-items:center; gap:4px;
+  padding:3px 10px; border-radius:20px; font-size:11px; font-weight:700;
+}
+.badge-success { background:rgba(6,214,160,0.12); color:#059669; }
+.badge-warning  { background:rgba(255,209,102,0.2);  color:#b45309; }
+.badge-danger   { background:rgba(239,71,111,0.12);  color:var(--danger); }
+
+/* ── TOAST ── */
+#toastContainer {
+  position:fixed; bottom:24px; right:24px; z-index:9999;
+  display:flex; flex-direction:column; gap:10px;
+}
+.toast {
+  padding:14px 18px; border-radius:12px; font-size:13px;
+  font-weight:600; color:white; min-width:280px; max-width:360px;
+  box-shadow:0 8px 24px rgba(0,0,0,0.2);
+  display:flex; align-items:flex-start; gap:10px;
+  animation:toastIn 0.3s ease;
+}
+@keyframes toastIn { from{transform:translateX(100%);opacity:0} to{transform:translateX(0);opacity:1} }
+.toast.success { background:linear-gradient(135deg,#059669,var(--accent2)); }
+.toast.error   { background:linear-gradient(135deg,var(--danger),#c2185b); }
+.toast.warning { background:linear-gradient(135deg,#e6a800,#f59e0b); }
+.toast.info    { background:linear-gradient(135deg,var(--primary),var(--accent)); }
+
+/* ── LOADING OVERLAY ── */
+.loading-overlay {
+  position:fixed; inset:0; background:rgba(10,36,68,0.45);
+  z-index:9000; display:none; align-items:center; justify-content:center;
+  backdrop-filter:blur(4px);
+}
+.loading-overlay.show { display:flex; }
+.loading-box {
+  background:white; border-radius:16px; padding:32px 40px;
+  text-align:center; box-shadow:0 32px 64px rgba(0,0,0,0.2);
+}
+.spinner {
+  width:44px; height:44px; border:4px solid var(--border);
+  border-top-color:var(--primary); border-radius:50%;
+  animation:spin 0.8s linear infinite; margin:0 auto 14px;
+}
+@keyframes spin { to{transform:rotate(360deg)} }
+.loading-box p { font-size:14px; color:var(--text-muted); font-weight:500; }
+
+/* ── LOGIN PAGE ── */
+#loginSection {
+  width:100%; max-width:420px; position:relative; z-index:1;
+}
+.login-card {
+  background:rgba(255,255,255,0.06); backdrop-filter:blur(20px);
+  border:1px solid rgba(255,255,255,0.12); border-radius:24px;
+  padding:40px 36px; box-shadow:0 32px 64px rgba(0,0,0,0.3);
+}
+.login-logo { text-align:center; margin-bottom:28px; }
+.login-logo .logo-icon {
+  width:68px; height:68px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  border-radius:18px; display:flex; align-items:center;
+  justify-content:center; margin:0 auto 14px;
+  font-size:26px; color:white; box-shadow:0 8px 24px rgba(0,180,216,0.4);
+}
+.login-logo h1 { font-size:26px; font-weight:800; color:white; }
+.login-logo p { color:rgba(255,255,255,0.55); font-size:13px; margin-top:4px; }
+.login-form label {
+  display:block; color:rgba(255,255,255,0.65); font-size:12px;
+  font-weight:600; margin-bottom:7px; letter-spacing:0.5px; text-transform:uppercase;
+}
+.input-wrap { position:relative; margin-bottom:18px; }
+.input-wrap i {
+  position:absolute; left:15px; top:50%; transform:translateY(-50%);
+  color:rgba(255,255,255,0.4); font-size:14px;
+}
+.login-input {
+  width:100%; padding:13px 15px 13px 42px;
+  background:rgba(255,255,255,0.08); border:1px solid rgba(255,255,255,0.15);
+  border-radius:var(--radius-sm); color:white; font-size:14px;
+  font-family:inherit; transition:all 0.2s;
+}
+.login-input:focus { outline:none; border-color:var(--accent); background:rgba(255,255,255,0.12); box-shadow:0 0 0 3px rgba(0,180,216,0.2); }
+.login-input::placeholder { color:rgba(255,255,255,0.3); }
+.btn-login {
+  width:100%; padding:14px;
+  background:linear-gradient(135deg,var(--accent),var(--accent2));
+  border:none; border-radius:var(--radius-sm); color:white;
+  font-size:14px; font-weight:700; cursor:pointer;
+  font-family:inherit; transition:all 0.2s; margin-top:4px;
+}
+.btn-login:hover { transform:translateY(-1px); box-shadow:0 8px 24px rgba(0,180,216,0.4); }
+.login-error {
+  background:rgba(239,71,111,0.2); border:1px solid rgba(239,71,111,0.4);
+  color:#ff8aaa; padding:10px 14px; border-radius:var(--radius-sm);
+  font-size:13px; margin-top:10px; display:none;
+}
+
+/* ── MAIN SECTION ── */
+#mainSection { width:100%; display:none; flex-direction:column; align-items:center; }
+#mainSection.show { display:flex; }
+
+/* ── BACK LINK ── */
+.back-link {
+  display:inline-flex; align-items:center; gap:7px;
+  color:rgba(255,255,255,0.6); font-size:13px; font-weight:500;
+  cursor:pointer; transition:color 0.2s;
+  text-decoration:none; margin-bottom:18px; align-self:flex-start;
+  position:relative; z-index:1;
+}
+.back-link:hover { color:white; }
+
+/* ── RESPONSIVE ── */
+@media (max-width:480px) {
+  body { padding:16px 12px 32px; }
+  .clock-time { font-size:40px; }
+  .btn-absen { min-width:120px; font-size:14px; padding:12px 14px; }
+}
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div class="loading-overlay" id="loadingOverlay">
+  <div class="loading-box">
+    <div class="spinner"></div>
+    <p id="loadingText">Memproses...</p>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toastContainer"></div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     LOGIN SECTION
+═══════════════════════════════════════════════════════════ -->
+<div id="loginSection">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="logo-icon"><i class="fas fa-fingerprint"></i></div>
+      <h1>SiHAdir</h1>
+      <p>Portal Absensi Pegawai</p>
+    </div>
+    <div class="login-form">
+      <label>Username</label>
+      <div class="input-wrap">
+        <i class="fas fa-user"></i>
+        <input type="text" class="login-input" id="loginUsername" placeholder="Masukkan username" autocomplete="username">
+      </div>
+      <label>Password</label>
+      <div class="input-wrap">
+        <i class="fas fa-lock"></i>
+        <input type="password" class="login-input" id="loginPassword" placeholder="Masukkan password" autocomplete="current-password">
+      </div>
+      <button class="btn-login" onclick="doLogin()">
+        <i class="fas fa-sign-in-alt"></i> Masuk
+      </button>
+      <div class="login-error" id="loginError"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════
+     MAIN SECTION (setelah login)
+═══════════════════════════════════════════════════════════ -->
+<div id="mainSection">
+
+  <!-- Header -->
+  <div class="app-header">
+    <div class="header-logo">
+      <div class="logo-box"><i class="fas fa-fingerprint"></i></div>
+      <div>
+        <div class="logo-text">SiHAdir</div>
+        <div class="logo-sub">Portal Absensi</div>
+      </div>
+    </div>
+    <div class="header-user" onclick="doLogout()" title="Logout">
+      <div class="user-ava" id="headerAva">A</div>
+      <div>
+        <div class="user-name" id="headerName">User</div>
+        <div class="user-role" id="headerRole">Pegawai</div>
+      </div>
+      <i class="fas fa-sign-out-alt" style="color:rgba(255,255,255,0.5);font-size:12px;margin-left:4px"></i>
+    </div>
+  </div>
+
+  <!-- Jam + Tombol Absen (persis seperti absen-card di Index.html) -->
+  <div class="clock-card">
+    <div class="clock-time" id="clockTime">00:00:00</div>
+    <div class="clock-date" id="clockDate">-</div>
+    <div class="absen-btns">
+      <button class="btn-absen btn-absen-masuk" id="btnMasuk" onclick="bukaKamera('masuk')" disabled>
+        <i class="fas fa-sign-in-alt"></i> Absen Masuk
+      </button>
+      <button class="btn-absen btn-absen-pulang" id="btnPulang" onclick="bukaKamera('pulang')" disabled>
+        <i class="fas fa-sign-out-alt"></i> Absen Pulang
+      </button>
+    </div>
+  </div>
+
+  <!-- Status Hari Ini -->
+  <div class="status-card">
+    <div class="status-card-header">
+      <i class="fas fa-calendar-check" style="color:var(--primary)"></i>
+      Status Kehadiran Hari Ini
+    </div>
+    <div class="status-card-body" id="statusBody">
+      <div style="text-align:center;padding:20px;color:var(--text-muted)">
+        <i class="fas fa-spinner fa-spin"></i>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── KAMERA + GPS (ditampilkan saat tombol absen diklik) ── -->
+  <div class="camera-section" id="cameraSection">
+    <div class="camera-header">
+      <h3 id="camTitle">📷 Absen Masuk</h3>
+      <button class="btn-close-cam" onclick="tutupKamera()"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="camera-body">
+      <p style="color:var(--text-muted);font-size:13px;margin-bottom:14px">
+        Ambil selfie untuk konfirmasi kehadiran Anda
+      </p>
+
+      <!-- Tampilan kamera — identik dengan modal di Index.html -->
+      <div class="camera-wrap" id="cameraWrap">
+        <video id="cameraVideo" autoplay playsinline></video>
+        <div class="camera-overlay"><div class="face-guide"></div></div>
+      </div>
+      <img id="capturedPhoto" class="captured-photo" alt="Foto Absen">
+
+      <div class="cam-actions">
+        <button class="btn btn-outline" id="btnCapture" onclick="ambilFoto()">
+          <i class="fas fa-camera"></i> Ambil Foto
+        </button>
+        <button class="btn btn-outline" id="btnRetake" onclick="retakeFoto()" style="display:none">
+          <i class="fas fa-redo"></i> Ulangi
+        </button>
+      </div>
+
+      <!-- Status GPS -->
+      <div class="lokasi-status" id="lokasiStatus">
+        <i class="fas fa-spinner fa-spin" style="color:var(--primary);margin-right:6px"></i>
+        Mengambil lokasi GPS...
+      </div>
+
+      <!-- Keterangan -->
+      <div class="ket-group">
+        <label>Keterangan (opsional)</label>
+        <input type="text" class="ket-input" id="absenKet" placeholder="Catatan tambahan...">
+      </div>
+    </div>
+
+    <!-- Footer kamera -->
+    <div class="camera-footer">
+      <button class="btn btn-outline" onclick="tutupKamera()">Batal</button>
+      <button class="btn btn-primary" id="btnSubmit" onclick="submitAbsen()" disabled>
+        <i class="fas fa-check"></i> Konfirmasi Absen
+      </button>
+    </div>
+  </div>
+
+  <!-- Link balik ke aplikasi utama (opsional) -->
+  <a class="back-link" href="javascript:void(0)" onclick="doLogout()">
+    <i class="fas fa-arrow-left"></i> Keluar dari Portal Absensi
+  </a>
+
+</div><!-- end #mainSection -->
+
+<script>
+// ═══════════════════════════════════════════════════════════════
+// KONFIGURASI — GANTI URL DI BAWAH
+// Isi dengan URL Cloudflare Worker kamu setelah deploy:
+// Format: https://sihadir-proxy.USERNAME.workers.dev
+// ═══════════════════════════════════════════════════════════════
+const PROXY_URL = 'https://sihadir-proxy.USERNAME.workers.dev'; // ← GANTI
+
+// ─── STATE ───────────────────────────────────────────────────
+let currentUser      = null;
+let cameraStream     = null;
+let capturedPhoto    = null;
+let currentGPS       = null;
+let currentAbsenType = null;
+
+// Session (sessionStorage agar aman seperti di Index.html)
+const SESSION_KEY      = 'sihadir_absensi_session';
+const SESSION_DURATION = 30 * 60 * 1000; // 30 menit
+
+function saveSession(user) {
+  try { sessionStorage.setItem(SESSION_KEY, JSON.stringify({ user, expiry: Date.now() + SESSION_DURATION })); } catch(e) {}
+}
+function loadSession() {
+  try {
+    const raw = sessionStorage.getItem(SESSION_KEY);
+    if (!raw) return null;
+    const s = JSON.parse(raw);
+    if (Date.now() > s.expiry) { sessionStorage.removeItem(SESSION_KEY); return null; }
+    return s.user;
+  } catch(e) { return null; }
+}
+function clearSession() {
+  try { sessionStorage.removeItem(SESSION_KEY); } catch(e) {}
+}
+
+// ─── API CALL via Netlify Function Proxy ────────────────────
+async function callGAS(action, payload = {}) {
+  const res = await fetch(PROXY_URL, {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify({ action, payload }),
+  });
+  if (!res.ok) {
+    const errText = await res.text().catch(() => '');
+    throw new Error(`HTTP ${res.status}: ${errText.substring(0, 120)}`);
+  }
+  return res.json();
+}
+
+// ─── UI HELPERS ─────────────────────────────────────────────
+function showLoading(text = 'Memproses...') {
+  document.getElementById('loadingText').textContent = text;
+  document.getElementById('loadingOverlay').classList.add('show');
+}
+function hideLoading() { document.getElementById('loadingOverlay').classList.remove('show'); }
+
+function showToast(msg, type = 'info') {
+  const icons = { success:'check-circle', error:'exclamation-circle', warning:'exclamation-triangle', info:'info-circle' };
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = `<i class="fas fa-${icons[type]||'info-circle'}"></i><span>${msg}</span>`;
+  document.getElementById('toastContainer').appendChild(el);
+  setTimeout(() => el.remove(), 4500);
+}
+
+// ─── JAM ─────────────────────────────────────────────────────
+function startClock() {
+  function tick() {
+    const now = new Date();
+    const tStr = now.toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit', second:'2-digit' });
+    const dStr = now.toLocaleDateString('id-ID', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+    const el   = document.getElementById('clockTime');
+    const dEl  = document.getElementById('clockDate');
+    if (el)  el.textContent  = tStr;
+    if (dEl) dEl.textContent = dStr;
+  }
+  tick();
+  setInterval(tick, 1000);
+}
+
+// ─── LOGIN ───────────────────────────────────────────────────
+async function doLogin() {
+  const username = document.getElementById('loginUsername').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const errEl    = document.getElementById('loginError');
+  errEl.style.display = 'none';
+
+  if (!username || !password) {
+    errEl.textContent = 'Username dan password wajib diisi.';
+    errEl.style.display = 'block';
+    return;
+  }
+
+  showLoading('Masuk...');
+  try {
+    const res = await callGAS('login', { username, password });
+    if (res.success) {
+      currentUser = res.data;
+      saveSession(currentUser);
+      tampilkanApp();
+    } else {
+      errEl.textContent = res.message || 'Login gagal.';
+      errEl.style.display = 'block';
+    }
+  } catch (e) {
+    errEl.textContent = 'Gagal terhubung ke server. Periksa URL GAS atau koneksi internet.';
+    errEl.style.display = 'block';
+    console.error('Login error:', e);
+  } finally {
+    hideLoading();
+  }
+}
+
+// Login via Enter
+document.addEventListener('keypress', e => {
+  if (e.key === 'Enter' && document.getElementById('loginSection').style.display !== 'none') doLogin();
+});
+
+// ─── LOGOUT ──────────────────────────────────────────────────
+function doLogout() {
+  stopCamera();
+  clearSession();
+  currentUser = null;
+  document.getElementById('mainSection').classList.remove('show');
+  document.getElementById('loginSection').style.display = 'block';
+  document.getElementById('loginUsername').value = '';
+  document.getElementById('loginPassword').value = '';
+  document.getElementById('loginError').style.display = 'none';
+}
+
+// ─── TAMPILKAN APP ───────────────────────────────────────────
+function tampilkanApp() {
+  document.getElementById('loginSection').style.display = 'none';
+  document.getElementById('mainSection').classList.add('show');
+
+  const nama = currentUser.nama || currentUser.username;
+  document.getElementById('headerName').textContent = nama;
+  document.getElementById('headerRole').textContent = currentUser.role;
+
+  const avaEl = document.getElementById('headerAva');
+  if (currentUser.fotoURL) {
+    avaEl.innerHTML = `<img src="${currentUser.fotoURL}" alt="foto">`;
+  } else {
+    avaEl.textContent = nama.charAt(0).toUpperCase();
+  }
+
+  startClock();
+  loadStatusAbsen();
+}
+
+// ─── STATUS ABSENSI ──────────────────────────────────────────
+async function loadStatusAbsen() {
+  const el = document.getElementById('statusBody');
+  el.innerHTML = '<div style="text-align:center;padding:20px;color:var(--text-muted)"><i class="fas fa-spinner fa-spin"></i></div>';
+  try {
+    const res = await callGAS('getStatusAbsensiHariIni', { nik: currentUser.nik });
+    if (!res.success) { el.innerHTML = `<p style="color:var(--danger);font-size:13px">${res.message}</p>`; return; }
+    const d = res.data;
+
+    // Aktifkan/nonaktifkan tombol
+    document.getElementById('btnMasuk').disabled  = d.sudahMasuk;
+    document.getElementById('btnPulang').disabled = !d.sudahMasuk || d.sudahPulang;
+
+    el.innerHTML = `
+      <div class="status-row ${d.sudahMasuk ? 'masuk' : 'empty'}">
+        <i class="fas fa-sign-in-alt status-icon" style="color:${d.sudahMasuk ? 'var(--accent2)' : 'var(--danger)'}"></i>
+        <div>
+          <div class="status-label">Absen Masuk</div>
+          <div class="status-value" style="color:${d.sudahMasuk ? 'var(--accent2)' : 'var(--text-muted)'}">
+            ${d.sudahMasuk ? d.jamMasuk : 'Belum absen'}
+          </div>
+          ${d.statusMasuk ? `<span class="badge ${d.statusMasuk.includes('Terlambat') ? 'badge-warning' : 'badge-success'}" style="margin-top:4px">${d.statusMasuk}</span>` : ''}
+        </div>
+      </div>
+      <div class="status-row ${d.sudahPulang ? 'pulang' : ''}">
+        <i class="fas fa-sign-out-alt status-icon" style="color:${d.sudahPulang ? 'var(--primary)' : 'var(--text-muted)'}"></i>
+        <div>
+          <div class="status-label">Absen Pulang</div>
+          <div class="status-value" style="color:${d.sudahPulang ? 'var(--primary)' : 'var(--text-muted)'}">
+            ${d.sudahPulang ? d.jamPulang : 'Belum absen'}
+          </div>
+          ${d.statusPulang ? `<span class="badge ${d.statusPulang.includes('Cepat') ? 'badge-warning' : 'badge-success'}" style="margin-top:4px">${d.statusPulang}</span>` : ''}
+        </div>
+      </div>`;
+  } catch (e) {
+    console.error('loadStatusAbsen error:', e);
+    el.innerHTML = `<p style="color:var(--danger);font-size:13px;padding:16px">Gagal memuat status: ${e.message}</p>`;
+  }
+}
+
+// ─── KAMERA ─────────────────────────────────────────────────
+async function bukaKamera(type) {
+  currentAbsenType  = type;
+  capturedPhoto     = null;
+  currentGPS        = null;
+
+  document.getElementById('camTitle').textContent = type === 'masuk' ? '📷 Absen Masuk' : '📷 Absen Pulang';
+  document.getElementById('cameraWrap').style.display   = 'block';
+  document.getElementById('capturedPhoto').style.display = 'none';
+  document.getElementById('btnCapture').style.display   = 'inline-flex';
+  document.getElementById('btnRetake').style.display    = 'none';
+  document.getElementById('btnSubmit').disabled         = true;
+  document.getElementById('absenKet').value             = '';
+  document.getElementById('lokasiStatus').innerHTML     =
+    '<i class="fas fa-spinner fa-spin" style="color:var(--primary);margin-right:6px"></i> Mengambil lokasi GPS...';
+
+  document.getElementById('cameraSection').classList.add('show');
+  document.getElementById('cameraSection').scrollIntoView({ behavior:'smooth', block:'nearest' });
+
+  await startCamera();
+  getGPS();
+}
+
+async function startCamera() {
+  try {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      throw new Error('Browser tidak mendukung API kamera');
+    }
+    // Constraints toleran — tidak memaksa resolusi fixed
+    const constraints = { video: { facingMode: { ideal: 'user' } } };
+    cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
+    const video  = document.getElementById('cameraVideo');
+    video.srcObject = cameraStream;
+    await video.play();
+    document.getElementById('btnCapture').disabled = false;
+  } catch (e) {
+    console.warn('Kamera error:', e.name, e.message);
+    // Tidak block absensi jika kamera gagal
+    document.getElementById('cameraWrap').style.display   = 'none';
+    document.getElementById('btnCapture').style.display   = 'none';
+    document.getElementById('btnRetake').style.display    = 'none';
+    document.getElementById('btnSubmit').disabled         = false; // izinkan tanpa foto
+    let pesanKamera = 'Absensi tanpa foto diizinkan.';
+    if (e.name === 'NotAllowedError' || e.name === 'PermissionDeniedError') {
+      pesanKamera = '⚠️ Akses kamera ditolak. Izinkan kamera di pengaturan browser, atau lanjutkan tanpa foto.';
+    } else if (e.name === 'NotFoundError') {
+      pesanKamera = '⚠️ Kamera tidak ditemukan. Absensi tanpa foto.';
+    } else if (e.name === 'NotReadableError') {
+      pesanKamera = '⚠️ Kamera digunakan aplikasi lain. Absensi tanpa foto.';
+    }
+    showToast(pesanKamera, 'warning');
+  }
+}
+
+function stopCamera() {
+  if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
+}
+
+function ambilFoto() {
+  const video  = document.getElementById('cameraVideo');
+  const canvas = document.createElement('canvas');
+  canvas.width  = video.videoWidth  || 640;
+  canvas.height = video.videoHeight || 480;
+  canvas.getContext('2d').drawImage(video, 0, 0);
+  capturedPhoto = canvas.toDataURL('image/jpeg', 0.7);
+  document.getElementById('capturedPhoto').src           = capturedPhoto;
+  document.getElementById('capturedPhoto').style.display = 'block';
+  document.getElementById('cameraWrap').style.display    = 'none';
+  document.getElementById('btnCapture').style.display    = 'none';
+  document.getElementById('btnRetake').style.display     = 'inline-flex';
+  stopCamera();
+  document.getElementById('btnSubmit').disabled = false;
+}
+
+function retakeFoto() {
+  capturedPhoto = null;
+  document.getElementById('capturedPhoto').style.display  = 'none';
+  document.getElementById('cameraWrap').style.display     = 'block';
+  document.getElementById('btnCapture').style.display     = 'inline-flex';
+  document.getElementById('btnRetake').style.display      = 'none';
+  document.getElementById('btnSubmit').disabled           = true;
+  startCamera();
+}
+
+function tutupKamera() {
+  stopCamera();
+  document.getElementById('cameraSection').classList.remove('show');
+  capturedPhoto    = null;
+  currentGPS       = null;
+  currentAbsenType = null;
+}
+
+// ─── GPS ─────────────────────────────────────────────────────
+function getGPS() {
+  if (!navigator.geolocation) {
+    document.getElementById('lokasiStatus').innerHTML =
+      '<i class="fas fa-exclamation-triangle" style="color:var(--warning);margin-right:6px"></i> GPS tidak didukung browser ini.';
+    return;
+  }
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      currentGPS = { lat: pos.coords.latitude, lng: pos.coords.longitude, acc: pos.coords.accuracy };
+      document.getElementById('lokasiStatus').innerHTML =
+        `<i class="fas fa-check-circle" style="color:var(--accent2);margin-right:6px"></i>
+         Lokasi ditemukan (akurasi: ${Math.round(pos.coords.accuracy)}m)<br>
+         <span style="font-size:11px">Lat: ${pos.coords.latitude.toFixed(6)}, Lng: ${pos.coords.longitude.toFixed(6)}</span>`;
+    },
+    err => {
+      document.getElementById('lokasiStatus').innerHTML =
+        `<i class="fas fa-exclamation-triangle" style="color:var(--warning);margin-right:6px"></i>
+         GPS tidak tersedia: ${err.message}`;
+    },
+    { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+  );
+}
+
+// ─── SUBMIT ABSEN ────────────────────────────────────────────
+async function submitAbsen() {
+  showLoading('Memproses absensi...');
+  try {
+    const action  = currentAbsenType === 'masuk' ? 'absenMasuk' : 'absenPulang';
+    const payload = {
+      nik:      currentUser.nik,
+      lat:      currentGPS ? currentGPS.lat : null,
+      lng:      currentGPS ? currentGPS.lng : null,
+      foto:     capturedPhoto,
+      ket:      document.getElementById('absenKet').value,
+      userInfo: { nik: currentUser.nik, username: currentUser.username },
+    };
+
+    const res = await callGAS(action, payload);
+    if (res.success) {
+      showToast(res.message, 'success');
+      tutupKamera();
+      await loadStatusAbsen();
+    } else {
+      showToast(res.message || 'Absensi gagal.', 'error');
+    }
+  } catch (e) {
+    console.error('submitAbsen error:', e);
+    showToast('Gagal terhubung ke server: ' + e.message, 'error');
+  } finally {
+    hideLoading();
+  }
+}
+
+// ─── INIT ─────────────────────────────────────────────────────
+window.onload = function() {
+  // PRIORITAS 1: Cek token dari URL hash (dikirim oleh Index.html via bukaPortalAbsensi())
+  const hash = window.location.hash.replace('#', '');
+  if (hash) {
+    try {
+      const tokenData = JSON.parse(atob(hash));
+      // Token valid maksimal 5 menit sejak dibuat
+      if (tokenData && tokenData.nik && (Date.now() - tokenData.ts) < 5 * 60 * 1000) {
+        currentUser = tokenData;
+        saveSession(currentUser);
+        // Bersihkan hash dari URL agar tidak bisa di-reuse dari bookmark
+        history.replaceState(null, '', window.location.pathname);
+        tampilkanApp();
+        showToast('Selamat datang, ' + (tokenData.nama || tokenData.username) + '!', 'success');
+        return;
+      }
+    } catch(e) {
+      console.warn('Token URL tidak valid:', e);
+    }
+    // Hash ada tapi tidak valid — bersihkan
+    history.replaceState(null, '', window.location.pathname);
+  }
+
+  // PRIORITAS 2: Cek session tersimpan di sessionStorage
+  const savedUser = loadSession();
+  if (savedUser) {
+    currentUser = savedUser;
+    tampilkanApp();
+    showToast('Selamat datang kembali, ' + (savedUser.nama || savedUser.username) + '!', 'success');
+    return;
+  }
+
+  // Tidak ada session → tampilkan login
+  document.getElementById('loginSection').style.display = 'block';
+};
+</script>
+</body>
+</html>
