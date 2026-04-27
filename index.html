@@ -1082,13 +1082,51 @@ tbody tr:hover { background: #f8faff; }
         <!-- CUTI IZIN -->
         <div class="page" id="pageCuti">
           <div class="page-header">
-            <div><h2>Cuti, Izin & Tugas Luar</h2><p>Pengajuan dan riwayat cuti/izin Anda</p></div>
-            <button class="btn btn-primary" onclick="bukaModalCuti()">
+            <div><h2>Cuti, Izin & Tugas Luar</h2><p>Pengajuan dan persetujuan cuti/izin</p></div>
+            <button class="btn btn-primary" id="btnAjukanCuti" onclick="bukaModalCuti()">
               <i class="fas fa-plus"></i> Ajukan
             </button>
           </div>
-          <div class="card">
-            <div class="card-header"><h3>Daftar Pengajuan</h3></div>
+
+          <!-- Tab untuk Admin/HRD/Manajer -->
+          <div id="cutiTabsWrap" style="display:none;margin-bottom:20px">
+            <div class="tabs">
+              <button class="tab active" id="tabMenunggu" onclick="switchCutiTab('menunggu',this)">
+                <i class="fas fa-clock" style="margin-right:6px"></i>Menunggu Approval
+                <span id="badgeMenunggu" style="background:var(--danger);color:white;border-radius:20px;padding:1px 8px;font-size:11px;margin-left:6px;display:none">0</span>
+              </button>
+              <button class="tab" id="tabSemua" onclick="switchCutiTab('semua',this)">
+                <i class="fas fa-list" style="margin-right:6px"></i>Semua Pengajuan
+              </button>
+              <button class="tab" id="tabMilik" onclick="switchCutiTab('milik',this)">
+                <i class="fas fa-user" style="margin-right:6px"></i>Pengajuan Saya
+              </button>
+            </div>
+          </div>
+
+          <!-- Tabel Menunggu Approval (Admin only) -->
+          <div class="card" id="cutiCardMenunggu" style="display:none">
+            <div class="card-header">
+              <h3><i class="fas fa-clock" style="color:var(--warning);margin-right:8px"></i>Menunggu Persetujuan</h3>
+              <button class="btn btn-outline btn-sm" onclick="loadCutiList()">
+                <i class="fas fa-sync"></i> Refresh
+              </button>
+            </div>
+            <div class="card-body">
+              <div class="table-wrap" id="cutiMenungguWrap">
+                <div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Memuat...</p></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tabel Semua / Milik Sendiri -->
+          <div class="card" id="cutiCardSemua">
+            <div class="card-header">
+              <h3 id="cutiCardTitle">Daftar Pengajuan</h3>
+              <button class="btn btn-outline btn-sm" onclick="loadCutiList()">
+                <i class="fas fa-sync"></i> Refresh
+              </button>
+            </div>
             <div class="card-body">
               <div class="table-wrap" id="cutiTableWrap">
                 <div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Memuat...</p></div>
@@ -2573,39 +2611,116 @@ async function submitAbsen() {
 // ============================================================
 // CUTI IZIN
 // ============================================================
+let cutiTabAktif = 'menunggu'; // default tab untuk admin
+
 async function loadCutiList() {
-  const wrap = document.getElementById('cutiTableWrap');
+  const canApprove = ['Admin','HRD','Manajer'].includes(currentUser.role);
+
+  // Tampilkan/sembunyikan tabs dan elemen sesuai role
+  const tabsWrap = document.getElementById('cutiTabsWrap');
+  const cardMenunggu = document.getElementById('cutiCardMenunggu');
+  const btnAjukan = document.getElementById('btnAjukanCuti');
+
+  if (canApprove) {
+    if (tabsWrap) tabsWrap.style.display = 'block';
+    // Admin tetap bisa ajukan cuti untuk dirinya sendiri
+    if (btnAjukan) btnAjukan.style.display = 'inline-flex';
+  } else {
+    if (tabsWrap) tabsWrap.style.display = 'none';
+    if (cardMenunggu) cardMenunggu.style.display = 'none';
+    cutiTabAktif = 'milik';
+  }
+
+  // Ambil semua data
+  const wrap      = document.getElementById('cutiTableWrap');
+  const wrapMenunggu = document.getElementById('cutiMenungguWrap');
+
   try {
     const res = await callServer('getCutiIzinList', { nik: currentUser.nik, role: currentUser.role });
-    if (!res.success || res.data.length === 0) {
-      wrap.innerHTML = '<div class="empty-state"><i class="fas fa-calendar-times"></i><p>Belum ada pengajuan</p></div>'; return;
+    if (!res.success) {
+      if (wrap) wrap.innerHTML = `<div class="empty-state"><p style="color:var(--danger)">${res.message}</p></div>`;
+      return;
     }
-    // FIX BUG #8: Manajer juga bisa approval, bukan hanya Admin/HRD
-    const canApprove = ['Admin','HRD','Manajer'].includes(currentUser.role);
-    const isAdmin = canApprove;
-    const statusBadge = { Menunggu: 'badge-warning', Disetujui: 'badge-success', Ditolak: 'badge-danger' };
-    wrap.innerHTML = `<table><thead><tr>
-      ${isAdmin ? '<th>NIK</th><th>Nama</th>' : ''}
-      <th>Jenis</th><th>Tgl Mulai</th><th>Tgl Selesai</th>
-      <th>Keterangan</th><th>Lampiran</th><th>Status</th><th>Diajukan</th>
-      ${isAdmin ? '<th>Aksi</th>' : ''}
-    </tr></thead><tbody>
-    ${res.data.map(c => `<tr>
-      ${isAdmin ? `<td><code style="font-size:11px">${c.nik}</code></td><td style="font-weight:600">${c.nama}</td>` : ''}
-      <td><span class="badge badge-info">${c.jenis}</span></td>
-      <td>${c.tanggalMulai||'-'}</td>
-      <td>${c.tanggalSelesai||'-'}</td>
-      <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${(c.keterangan||'').replace(/"/g,'&quot;')}">${c.keterangan||'-'}</td>
-      <td>${c.lampiranURL ? `<a href="${c.lampiranURL}" target="_blank" class="btn btn-outline btn-sm" style="font-size:11px"><i class="fas fa-paperclip"></i> Lihat</a>` : '-'}</td>
-      <td><span class="badge ${statusBadge[c.status]||'badge-gray'}">${c.status}</span></td>
-      <td style="font-size:12px;white-space:nowrap">${c.diajukanAt||'-'}</td>
-      ${isAdmin ? (c.status === 'Menunggu'
-        ? `<td><button class="btn btn-primary btn-sm" onclick="bukaApproval('${c.id}','${(c.nama||'').replace(/'/g,"\'")}','${c.jenis}','${c.tanggalMulai}')">Proses</button></td>`
-        : '<td style="color:var(--text-muted);font-size:12px">Selesai</td>')
-      : ''}
-    </tr>`).join('')}
-    </tbody></table>`;
-  } catch (e) { wrap.innerHTML = `<div class="empty-state"><p>Error: ${e}</p></div>`; }
+
+    const allData      = res.data || [];
+    const menungguData = allData.filter(c => c.status === 'Menunggu');
+    const milikData    = allData.filter(c => String(c.nik) === String(currentUser.nik));
+
+    // Update badge menunggu
+    const badge = document.getElementById('badgeMenunggu');
+    if (badge) {
+      badge.textContent = menungguData.length;
+      badge.style.display = menungguData.length > 0 ? 'inline' : 'none';
+    }
+
+    const statusBadge = {
+      Menunggu:  'badge-warning',
+      Disetujui: 'badge-success',
+      Ditolak:   'badge-danger',
+    };
+
+    // Helper render tabel
+    function renderTabel(data, showNama, showAksi, emptyMsg) {
+      if (!data.length) return `<div class="empty-state"><i class="fas fa-calendar-check"></i><p>${emptyMsg}</p></div>`;
+      return `<table><thead><tr>
+        ${showNama ? '<th>NIK</th><th>Nama</th>' : ''}
+        <th>Jenis</th><th>Tgl Mulai</th><th>Tgl Selesai</th>
+        <th>Keterangan</th><th>Lampiran</th><th>Status</th>
+        <th>Catatan Admin</th><th>Diajukan</th>
+        ${showAksi ? '<th>Aksi</th>' : ''}
+      </tr></thead><tbody>
+      ${data.map(c => `<tr>
+        ${showNama ? `<td><code style="font-size:11px">${c.nik}</code></td><td style="font-weight:600">${c.nama||'-'}</td>` : ''}
+        <td><span class="badge badge-info">${c.jenis}</span></td>
+        <td style="white-space:nowrap">${c.tanggalMulai||'-'}</td>
+        <td style="white-space:nowrap">${c.tanggalSelesai||'-'}</td>
+        <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${(c.keterangan||'').replace(/"/g,'&quot;')}">${c.keterangan||'-'}</td>
+        <td>${c.lampiranURL ? `<a href="${c.lampiranURL}" target="_blank" class="btn btn-outline btn-sm" style="font-size:11px"><i class="fas fa-paperclip"></i> Lihat</a>` : '<span style="color:var(--text-muted);font-size:12px">-</span>'}</td>
+        <td><span class="badge ${statusBadge[c.status]||'badge-gray'}">${c.status}</span></td>
+        <td style="font-size:12px;max-width:120px">${c.catatanAdmin||'-'}</td>
+        <td style="font-size:12px;white-space:nowrap">${c.diajukanAt||'-'}</td>
+        ${showAksi ? (c.status === 'Menunggu'
+          ? `<td><button class="btn btn-primary btn-sm" onclick="bukaApproval('${c.id}','${(c.nama||'').replace(/'/g,"\\'")}','${c.jenis}','${c.tanggalMulai}','${c.tanggalSelesai}','${(c.keterangan||'').replace(/'/g,"\\'")}')"><i class="fas fa-check-circle"></i> Proses</button></td>`
+          : `<td><span style="color:var(--text-muted);font-size:12px">Selesai</span></td>`)
+        : ''}
+      </tr>`).join('')}
+      </tbody></table>`;
+    }
+
+    // Render tabel Menunggu (untuk Admin)
+    if (canApprove && wrapMenunggu) {
+      wrapMenunggu.innerHTML = renderTabel(menungguData, true, true, 'Tidak ada pengajuan yang menunggu persetujuan');
+    }
+
+    // Render tabel sesuai tab aktif
+    if (cutiTabAktif === 'menunggu' && canApprove) {
+      if (cardMenunggu) cardMenunggu.style.display = 'block';
+      document.getElementById('cutiCardSemua').style.display = 'none';
+    } else if (cutiTabAktif === 'semua' && canApprove) {
+      if (cardMenunggu) cardMenunggu.style.display = 'none';
+      document.getElementById('cutiCardSemua').style.display = 'block';
+      document.getElementById('cutiCardTitle').textContent = 'Semua Pengajuan';
+      if (wrap) wrap.innerHTML = renderTabel(allData, true, true, 'Belum ada pengajuan');
+    } else {
+      // Tab milik sendiri atau role Pegawai
+      if (cardMenunggu) cardMenunggu.style.display = 'none';
+      document.getElementById('cutiCardSemua').style.display = 'block';
+      document.getElementById('cutiCardTitle').textContent = 'Pengajuan Saya';
+      if (wrap) wrap.innerHTML = renderTabel(milikData, false, false, 'Belum ada pengajuan cuti/izin');
+    }
+
+  } catch (e) {
+    console.error('[loadCutiList]', e);
+    if (wrap) wrap.innerHTML = `<div class="empty-state"><p style="color:var(--danger)">Gagal memuat: ${e.message||e}</p></div>`;
+  }
+}
+
+function switchCutiTab(tab, el) {
+  cutiTabAktif = tab;
+  // Update active tab style
+  document.querySelectorAll('#cutiTabsWrap .tab').forEach(t => t.classList.remove('active'));
+  if (el) el.classList.add('active');
+  loadCutiList();
 }
 
 function bukaModalCuti() {
@@ -2667,13 +2782,16 @@ async function submitCuti() {
   finally { hideLoading(); }
 }
 
-function bukaApproval(id, nama, jenis, tgl) {
+function bukaApproval(id, nama, jenis, tglMulai, tglSelesai, keterangan) {
   document.getElementById('approvalID').value = id;
   document.getElementById('approvalTitle').textContent = `Proses Pengajuan ${jenis}`;
   document.getElementById('approvalInfo').innerHTML = `
-    <strong>${nama}</strong><br>
-    Jenis: <strong>${jenis}</strong><br>
-    Tanggal: <strong>${tgl}</strong>`;
+    <div style="display:grid;gap:8px">
+      <div><span style="color:var(--text-muted);font-size:12px">Pegawai</span><br><strong>${nama}</strong></div>
+      <div><span style="color:var(--text-muted);font-size:12px">Jenis</span><br><strong>${jenis}</strong></div>
+      <div><span style="color:var(--text-muted);font-size:12px">Periode</span><br><strong>${tglMulai} s/d ${tglSelesai||tglMulai}</strong></div>
+      <div><span style="color:var(--text-muted);font-size:12px">Keterangan</span><br><strong>${keterangan||'-'}</strong></div>
+    </div>`;
   document.getElementById('approvalCatatan').value = '';
   bukaModal('modalApproval');
 }
