@@ -1113,7 +1113,7 @@ tbody tr:hover { background: #f8faff; }
               </button>
             </div>
             <div class="card-body">
-              <div class="table-wrap" id="cutiMenungguWrap">
+              <div class="table-wrap" id="cuti_menungguWrap">
                 <div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Memuat...</p></div>
               </div>
             </div>
@@ -2196,8 +2196,8 @@ function initApp() {
   document.getElementById('sidebarRole').textContent = currentUser.role;
 
   const avaEl = document.getElementById('sidebarAva');
-  if (currentUser.fotoURL) {
-    avaEl.innerHTML = `<img src="${currentUser.fotoURL}" alt="foto" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
+  if (currentUser.foto_url) {
+    avaEl.innerHTML = `<img src="${currentUser.foto_url}" alt="foto" style="width:100%;height:100%;object-fit:cover;border-radius:50%">`;
   } else {
     avaEl.textContent = nama.charAt(0).toUpperCase();
   }
@@ -2233,17 +2233,17 @@ async function loadDashboard() {
     if (!res.success) return;
     const d = res.data;
 
-    const persen = d.totalHariKerja > 0 ? Math.round(d.totalHadir / d.totalHariKerja * 100) : 0;
+    const persen = d.total_hari_kerja > 0 ? Math.round(d.total_hadir / d.total_hari_kerja * 100) : 0;
 
     const statsData = [
-      { label: 'Total Hadir', value: d.totalHadir, icon: 'fa-check-circle', cls: 'green', sub: `${persen}% dari ${d.totalHariKerja} hari kerja` },
-      { label: 'Terlambat', value: d.totalTerlambat, icon: 'fa-clock', cls: 'orange', sub: 'Hari ini sampai akhir bulan' },
-      { label: 'Tidak Hadir', value: d.totalAlpha, icon: 'fa-times-circle', cls: 'red', sub: 'Alpha bulan ini' },
-      { label: 'Pulang Cepat', value: d.totalPulangCepat, icon: 'fa-running', cls: 'cyan', sub: 'Bulan ini' },
+      { label: 'Total Hadir', value: d.total_hadir, icon: 'fa-check-circle', cls: 'green', sub: `${persen}% dari ${d.total_hari_kerja} hari kerja` },
+      { label: 'Terlambat', value: d.total_terlambat, icon: 'fa-clock', cls: 'orange', sub: 'Hari ini sampai akhir bulan' },
+      { label: 'Tidak Hadir', value: d.total_alpha, icon: 'fa-times-circle', cls: 'red', sub: 'Alpha bulan ini' },
+      { label: 'Pulang Cepat', value: d.total_pulang_cepat, icon: 'fa-running', cls: 'cyan', sub: 'Bulan ini' },
     ];
 
     if (currentUser.role === 'Admin' || currentUser.role === 'HRD') {
-      statsData.push({ label: 'Total Pegawai Aktif', value: d.totalPegawai, icon: 'fa-users', cls: 'blue', sub: 'Terdaftar di sistem' });
+      statsData.push({ label: 'Total Pegawai Aktif', value: d.total_pegawai, icon: 'fa-users', cls: 'blue', sub: 'Terdaftar di sistem' });
     }
 
     document.getElementById('statsGrid').innerHTML = statsData.map(s => `
@@ -2266,11 +2266,11 @@ async function loadDashboard() {
         </div>
         <div style="display:flex;flex-direction:column;gap:8px">
           ${[
-            ['Hari Kerja (bulan ini)', d.totalHariKerja, 'var(--text)'],
-            ['Hadir', d.totalHadir, 'var(--accent2)'],
-            ['Terlambat', d.totalTerlambat, '#e6a800'],
-            ['Tidak Hadir (Alpha)', d.totalAlpha, 'var(--danger)'],
-            ['Pulang Cepat', d.totalPulangCepat, 'var(--accent)'],
+            ['Hari Kerja (bulan ini)', d.total_hari_kerja, 'var(--text)'],
+            ['Hadir', d.total_hadir, 'var(--accent2)'],
+            ['Terlambat', d.total_terlambat, '#e6a800'],
+            ['Tidak Hadir (Alpha)', d.total_alpha, 'var(--danger)'],
+            ['Pulang Cepat', d.total_pulang_cepat, 'var(--accent)'],
           ].map(([label, val, color]) => `
             <div style="display:flex;justify-content:space-between;align-items:center">
               <span style="font-size:13px;color:var(--text-muted)">${label}</span>
@@ -2278,12 +2278,12 @@ async function loadDashboard() {
             </div>
           `).join('')}
         </div>
-        ${d.cutiMenunggu > 0 ? `<div style="padding:10px 14px;background:rgba(239,71,111,0.08);border-radius:8px;font-size:13px;color:var(--danger);font-weight:600">⏳ ${d.cutiMenunggu} pengajuan menunggu approval</div>` : ''}
+        ${d.cuti_menunggu > 0 ? `<div style="padding:10px 14px;background:rgba(239,71,111,0.08);border-radius:8px;font-size:13px;color:var(--danger);font-weight:600">⏳ ${d.cuti_menunggu} pengajuan menunggu approval</div>` : ''}
       </div>
     `;
 
     // Cuti menunggu (Admin)
-    if ((currentUser.role === 'Admin' || currentUser.role === 'HRD') && d.cutiMenunggu > 0) {
+    if ((currentUser.role === 'Admin' || currentUser.role === 'HRD') && d.cuti_menunggu > 0) {
       document.getElementById('dashCutiCard').style.display = 'block';
       loadDashCuti();
     }
@@ -2305,9 +2305,9 @@ async function loadDashCuti() {
       <tr>
         <td><strong>${c.nama}</strong><br><span style="font-size:11px;color:var(--text-muted)">${c.nik}</span></td>
         <td>${c.jenis}</td>
-        <td>${c.tanggalMulai}</td>
+        <td>${c.tanggal_mulai}</td>
         <td><span class="badge badge-warning">Menunggu</span></td>
-        <td><button class="btn btn-primary btn-sm" onclick="bukaApproval('${c.id}','${c.nama}','${c.jenis}','${c.tanggalMulai}')">Proses</button></td>
+        <td><button class="btn btn-primary btn-sm" onclick="bukaApproval('${c.id}','${c.nama}','${c.jenis}','${c.tanggal_mulai}')">Proses</button></td>
       </tr>`).join('')}
     </tbody></table></div>`;
 }
@@ -2317,7 +2317,7 @@ async function loadGrafik() {
     const res = await callServer('getGrafikKehadiran', { nik: currentUser.nik, role: currentUser.role });
     if (!res.success) return;
 
-    const labels = res.data.map(d => d.namaBulan);
+    const labels = res.data.map(d => d.nama_bulan);
     const hadir = res.data.map(d => d.hadir);
     const terlambat = res.data.map(d => d.terlambat);
     const alpha = res.data.map(d => d.alpha);
@@ -2367,29 +2367,29 @@ async function loadStatusAbsen() {
 
     if (res.success) {
       const d = res.data;
-      btnMasuk.disabled = d.sudahMasuk;
-      btnPulang.disabled = !d.sudahMasuk || d.sudahPulang;
+      btnMasuk.disabled = d.sudah_masuk;
+      btnPulang.disabled = !d.sudah_masuk || d.sudah_pulang;
 
       statusEl.innerHTML = `
         <div style="display:flex;flex-direction:column;gap:12px">
-          <div style="display:flex;align-items:center;gap:12px;padding:12px;background:${d.sudahMasuk ? 'rgba(6,214,160,0.08)' : 'rgba(239,71,111,0.06)'};border-radius:10px">
-            <i class="fas fa-sign-in-alt" style="color:${d.sudahMasuk ? 'var(--accent2)' : 'var(--danger)'}; font-size:20px"></i>
+          <div style="display:flex;align-items:center;gap:12px;padding:12px;background:${d.sudah_masuk ? 'rgba(6,214,160,0.08)' : 'rgba(239,71,111,0.06)'};border-radius:10px">
+            <i class="fas fa-sign-in-alt" style="color:${d.sudah_masuk ? 'var(--accent2)' : 'var(--danger)'}; font-size:20px"></i>
             <div>
               <div style="font-size:13px;font-weight:700">Absen Masuk</div>
-              <div style="font-size:15px;font-weight:800;color:${d.sudahMasuk ? 'var(--accent2)' : 'var(--text-muted)'}">
-                ${d.sudahMasuk ? d.jamMasuk : 'Belum absen'}
+              <div style="font-size:15px;font-weight:800;color:${d.sudah_masuk ? 'var(--accent2)' : 'var(--text-muted)'}">
+                ${d.sudah_masuk ? d.jam_masuk : 'Belum absen'}
               </div>
-              ${d.statusMasuk ? `<span class="badge ${d.statusMasuk.includes('Terlambat') ? 'badge-warning' : 'badge-success'}" style="margin-top:4px">${d.statusMasuk}</span>` : ''}
+              ${d.status_masuk ? `<span class="badge ${d.status_masuk.includes('Terlambat') ? 'badge-warning' : 'badge-success'}" style="margin-top:4px">${d.status_masuk}</span>` : ''}
             </div>
           </div>
-          <div style="display:flex;align-items:center;gap:12px;padding:12px;background:${d.sudahPulang ? 'rgba(15,76,138,0.06)' : 'rgba(107,122,153,0.06)'};border-radius:10px">
-            <i class="fas fa-sign-out-alt" style="color:${d.sudahPulang ? 'var(--primary)' : 'var(--text-muted)'}; font-size:20px"></i>
+          <div style="display:flex;align-items:center;gap:12px;padding:12px;background:${d.sudah_pulang ? 'rgba(15,76,138,0.06)' : 'rgba(107,122,153,0.06)'};border-radius:10px">
+            <i class="fas fa-sign-out-alt" style="color:${d.sudah_pulang ? 'var(--primary)' : 'var(--text-muted)'}; font-size:20px"></i>
             <div>
               <div style="font-size:13px;font-weight:700">Absen Pulang</div>
-              <div style="font-size:15px;font-weight:800;color:${d.sudahPulang ? 'var(--primary)' : 'var(--text-muted)'}">
-                ${d.sudahPulang ? d.jamPulang : 'Belum absen'}
+              <div style="font-size:15px;font-weight:800;color:${d.sudah_pulang ? 'var(--primary)' : 'var(--text-muted)'}">
+                ${d.sudah_pulang ? d.jam_pulang : 'Belum absen'}
               </div>
-              ${d.statusPulang ? `<span class="badge ${d.statusPulang.includes('Cepat') ? 'badge-warning' : 'badge-success'}" style="margin-top:4px">${d.statusPulang}</span>` : ''}
+              ${d.status_pulang ? `<span class="badge ${d.status_pulang.includes('Cepat') ? 'badge-warning' : 'badge-success'}" style="margin-top:4px">${d.status_pulang}</span>` : ''}
             </div>
           </div>
         </div>`;
@@ -2408,7 +2408,7 @@ async function loadStatusAbsen() {
 
 function loadInfoShift() {
   const el = document.getElementById('infoShift');
-  const tipe = currentUser.tipeWaktu || 'Non-Shift';
+  const tipe = currentUser.tipe_waktu || 'Non-Shift';
   const shiftData = {
     'Non-Shift': { icon:'fa-sun', color:'var(--warning)', jam:'08:00 - 16:30', desc:'Senin - Jumat' },
     'Fleksibel': { icon:'fa-infinity', color:'var(--accent)', jam:'Fleksibel', desc:'Bebas jam masuk/pulang' },
@@ -2455,10 +2455,10 @@ async function loadAbsensiList() {
         <tr>
           ${isAdmin ? `<td><code style="font-size:11px">${a.nik}</code></td><td>${a.nama}</td>` : ''}
           <td>${a.tanggal}</td>
-          <td><strong>${a.jamMasuk || '-'}</strong></td>
-          <td>${a.jamPulang || '-'}</td>
-          <td>${a.statusMasuk ? `<span class="badge ${a.statusMasuk.includes('Terlambat') ? 'badge-warning' : 'badge-success'}">${a.statusMasuk}</span>` : '-'}</td>
-          <td>${a.statusPulang ? `<span class="badge ${a.statusPulang.includes('Cepat') ? 'badge-warning' : 'badge-success'}">${a.statusPulang}</span>` : '-'}</td>
+          <td><strong>${a.jam_masuk || '-'}</strong></td>
+          <td>${a.jam_pulang || '-'}</td>
+          <td>${a.status_masuk ? `<span class="badge ${a.status_masuk.includes('Terlambat') ? 'badge-warning' : 'badge-success'}">${a.status_masuk}</span>` : '-'}</td>
+          <td>${a.status_pulang ? `<span class="badge ${a.status_pulang.includes('Cepat') ? 'badge-warning' : 'badge-success'}">${a.status_pulang}</span>` : '-'}</td>
           <td>${a.shift || '-'}</td>
         </tr>`).join('')}
       </tbody></table>`;
@@ -2590,7 +2590,7 @@ async function submitAbsen() {
       lng: currentGPS ? currentGPS.lng : null,
       foto: capturedPhotoData,
       ket: document.getElementById('absenKet').value,
-      userInfo: { nik: currentUser.nik, username: currentUser.username }
+      user_info: { nik: currentUser.nik, username: currentUser.username }
     };
     const res = await callServer(action, payload);
     if (res.success) {
@@ -2633,7 +2633,7 @@ async function loadCutiList() {
 
   // Ambil semua data
   const wrap      = document.getElementById('cutiTableWrap');
-  const wrapMenunggu = document.getElementById('cutiMenungguWrap');
+  const wrapMenunggu = document.getElementById('cuti_menungguWrap');
 
   try {
     const res = await callServer('getCutiIzinList', { nik: currentUser.nik, role: currentUser.role });
@@ -2672,15 +2672,15 @@ async function loadCutiList() {
       ${data.map(c => `<tr>
         ${showNama ? `<td><code style="font-size:11px">${c.nik}</code></td><td style="font-weight:600">${c.nama||'-'}</td>` : ''}
         <td><span class="badge badge-info">${c.jenis}</span></td>
-        <td style="white-space:nowrap">${c.tanggalMulai||'-'}</td>
-        <td style="white-space:nowrap">${c.tanggalSelesai||'-'}</td>
+        <td style="white-space:nowrap">${c.tanggal_mulai||'-'}</td>
+        <td style="white-space:nowrap">${c.tanggal_selesai||'-'}</td>
         <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${(c.keterangan||'').replace(/"/g,'&quot;')}">${c.keterangan||'-'}</td>
-        <td>${c.lampiranURL ? `<a href="${c.lampiranURL}" target="_blank" class="btn btn-outline btn-sm" style="font-size:11px"><i class="fas fa-paperclip"></i> Lihat</a>` : '<span style="color:var(--text-muted);font-size:12px">-</span>'}</td>
+        <td>${c.lampiran_url ? `<a href="${c.lampiran_url}" target="_blank" class="btn btn-outline btn-sm" style="font-size:11px"><i class="fas fa-paperclip"></i> Lihat</a>` : '<span style="color:var(--text-muted);font-size:12px">-</span>'}</td>
         <td><span class="badge ${statusBadge[c.status]||'badge-gray'}">${c.status}</span></td>
-        <td style="font-size:12px;max-width:120px">${c.catatanAdmin||'-'}</td>
-        <td style="font-size:12px;white-space:nowrap">${c.diajukanAt||'-'}</td>
+        <td style="font-size:12px;max-width:120px">${c.catatan_admin||'-'}</td>
+        <td style="font-size:12px;white-space:nowrap">${c.diajukan_at||'-'}</td>
         ${showAksi ? (c.status === 'Menunggu'
-          ? `<td><button class="btn btn-primary btn-sm" onclick="bukaApproval('${c.id}','${(c.nama||'').replace(/'/g,"\\'")}','${c.jenis}','${c.tanggalMulai}','${c.tanggalSelesai}','${(c.keterangan||'').replace(/'/g,"\\'")}')"><i class="fas fa-check-circle"></i> Proses</button></td>`
+          ? `<td><button class="btn btn-primary btn-sm" onclick="bukaApproval('${c.id}','${(c.nama||'').replace(/'/g,"\\'")}','${c.jenis}','${c.tanggal_mulai}','${c.tanggal_selesai}','${(c.keterangan||'').replace(/'/g,"\\'")}')"><i class="fas fa-check-circle"></i> Proses</button></td>`
           : `<td><span style="color:var(--text-muted);font-size:12px">Selesai</span></td>`)
         : ''}
       </tr>`).join('')}
@@ -2750,12 +2750,12 @@ async function submitCuti() {
 
   // FIX: proses lampiran (opsional)
   let lampiranB64 = null;
-  let lampiranNama = '';
+  let lampiran_nama = '';
   const lampiranEl = document.getElementById('cutiLampiran');
   if (lampiranEl && lampiranEl.files[0]) {
     const file = lampiranEl.files[0];
     if (file.size > 5 * 1024 * 1024) { showToast('Ukuran lampiran maksimal 5MB', 'warning'); return; }
-    lampiranNama = file.name;
+    lampiran_nama = file.name;
     lampiranB64 = await new Promise((res, rej) => {
       const r = new FileReader();
       r.onload = () => res(r.result);
@@ -2769,12 +2769,12 @@ async function submitCuti() {
     const res = await callServer('ajukanCutiIzin', {
       nik: currentUser.nik,
       jenis,
-      tanggalMulai: tglMulai,
-      tanggalSelesai: tglSelesai,
+      tanggal_mulai: tglMulai,
+      tanggal_selesai: tglSelesai,
       keterangan: ket,
       lampiran: lampiranB64,
-      lampiranNama,
-      userInfo: { nik: currentUser.nik, username: currentUser.username }
+      lampiran_nama,
+      user_info: { nik: currentUser.nik, username: currentUser.username }
     });
     if (res.success) { showToast(res.message, 'success'); tutupModal('modalCuti'); loadCutiList(); }
     else showToast(res.message, 'error');
@@ -2803,7 +2803,7 @@ async function submitApproval(status) {
       id: document.getElementById('approvalID').value,
       status,
       catatan: document.getElementById('approvalCatatan').value,
-      userInfo: { nik: currentUser.nik, username: currentUser.username }
+      user_info: { nik: currentUser.nik, username: currentUser.username }
     });
     if (res.success) {
       showToast(res.message, 'success');
@@ -2838,9 +2838,9 @@ async function loadLaporanKerja() {
         <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px">
           <div>
             <div style="font-weight:700;font-size:14px">${l.tanggal||'-'}</div>
-            ${l.jamMulai ? `<div style="font-size:12px;color:var(--text-muted)">${l.jamMulai} - ${l.jamSelesai || '...'}</div>` : ''}
+            ${l.jam_mulai ? `<div style="font-size:12px;color:var(--text-muted)">${l.jam_mulai} - ${l.jam_selesai || '...'}</div>` : ''}
           </div>
-          ${l.fotoURL ? `<a href="${l.fotoURL}" target="_blank"><img src="${l.fotoURL}" style="width:48px;height:48px;object-fit:cover;border-radius:8px;border:1px solid var(--border)"></a>` : ''}
+          ${l.foto_url ? `<a href="${l.foto_url}" target="_blank"><img src="${l.foto_url}" style="width:48px;height:48px;object-fit:cover;border-radius:8px;border:1px solid var(--border)"></a>` : ''}
         </div>
         <p style="font-size:13px;color:var(--text)">${l.deskripsi||''}</p>
       </div>`).join('');
@@ -2884,11 +2884,11 @@ async function submitLaporan() {
     const payload = {
       nik: currentUser.nik,
       tanggal: document.getElementById('lapTanggal').value,
-      jamMulai: document.getElementById('lapJamMulai').value,
-      jamSelesai: document.getElementById('lapJamSelesai').value,
+      jam_mulai: document.getElementById('lapJamMulai').value,
+      jam_selesai: document.getElementById('lapJamSelesai').value,
       deskripsi: document.getElementById('lapDeskripsi').value,
       foto: fotoB64,
-      userInfo: { nik: currentUser.nik, username: currentUser.username }
+      user_info: { nik: currentUser.nik, username: currentUser.username }
     };
     if (!payload.deskripsi) { showToast('Deskripsi wajib diisi', 'warning'); return; }
     const res = await callServer('saveLaporanKerja', payload);
@@ -2932,7 +2932,7 @@ function renderPegawaiTable() {
     <td>
       <div style="display:flex;align-items:center;gap:10px">
         <div style="width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,var(--primary-light),var(--accent));display:flex;align-items:center;justify-content:center;color:white;font-weight:700;font-size:13px;flex-shrink:0;overflow:hidden">
-          ${p.fotoURL ? `<img src="${p.fotoURL}" style="width:100%;height:100%;object-fit:cover">` : p.nama.charAt(0).toUpperCase()}
+          ${p.foto_url ? `<img src="${p.foto_url}" style="width:100%;height:100%;object-fit:cover">` : p.nama.charAt(0).toUpperCase()}
         </div>
         <div>
           <div style="font-weight:600">${p.nama}</div>
@@ -2942,7 +2942,7 @@ function renderPegawaiTable() {
     </td>
     <td>${p.jabatan || '-'}</td>
     <td>${p.departemen || '-'}</td>
-    <td><span class="badge badge-info">${p.tipeWaktu || '-'}</span></td>
+    <td><span class="badge badge-info">${p.tipe_waktu || '-'}</span></td>
     <td><span class="badge ${p.status === 'Aktif' ? 'badge-success' : 'badge-gray'}">${p.status}</span></td>
     <td>
       <div style="display:flex;gap:6px">
@@ -2986,13 +2986,13 @@ async function editPegawai(p) {
   document.getElementById('pJabatan').value = p.jabatan || '';
   document.getElementById('pDepartemen').value = p.departemen || '';
   document.getElementById('pEmail').value = p.email || '';
-  document.getElementById('pNoHP').value = p.noHP || '';
+  document.getElementById('pNoHP').value = p.no_hp || '';
   document.getElementById('pStatus').value = p.status || 'Aktif';
-  document.getElementById('pTipeWaktu').value = p.tipeWaktu || 'Non-Shift';
-  document.getElementById('pTanggalMasuk').value = p.tanggalMasuk ? new Date(p.tanggalMasuk).toISOString().split('T')[0] : '';
-  await loadShiftSelectModal(p.shiftID);
-  const lokasiIDs = p.lokasiID ? p.lokasiID.split(',').map(s => s.trim()) : [];
-  await loadLokasiCheckboxes(lokasiIDs);
+  document.getElementById('pTipeWaktu').value = p.tipe_waktu || 'Non-Shift';
+  document.getElementById('pTanggalMasuk').value = p.tanggal_masuk ? new Date(p.tanggal_masuk).toISOString().split('T')[0] : '';
+  await loadShiftSelectModal(p.shift_id);
+  const lokasi_ids = p.lokasi_id ? p.lokasi_id.split(',').map(s => s.trim()) : [];
+  await loadLokasiCheckboxes(lokasi_ids);
   toggleShiftField();
   bukaModal('modalPegawai');
 }
@@ -3005,7 +3005,7 @@ async function loadShiftSelectModal(selectedID) {
     if (res.success) res.data.forEach(s => {
       const opt = document.createElement('option');
       opt.value = s.id;
-      opt.textContent = `${s.nama} (${s.jamMasuk}-${s.jamPulang}) ${s.departemen ? '['+s.departemen+']' : ''}`;
+      opt.textContent = `${s.nama} (${s.jam_masuk}-${s.jam_pulang}) ${s.departemen ? '['+s.departemen+']' : ''}`;
       if (s.id === selectedID) opt.selected = true;
       sel.appendChild(opt);
     });
@@ -3054,15 +3054,15 @@ async function submitPegawai() {
         jabatan: document.getElementById('pJabatan').value,
         departemen: document.getElementById('pDepartemen').value,
         email: document.getElementById('pEmail').value,
-        noHP: document.getElementById('pNoHP').value,
+        no_hp: document.getElementById('pNoHP').value,
         status: document.getElementById('pStatus').value,
         role: document.getElementById('pRole').value,
-        tipeWaktu: document.getElementById('pTipeWaktu').value,
-        shiftID: document.getElementById('pShiftID').value,
-        lokasiID: selectedLokasi,
-        tanggalMasuk: document.getElementById('pTanggalMasuk').value,
+        tipe_waktu: document.getElementById('pTipeWaktu').value,
+        shift_id: document.getElementById('pShiftID').value,
+        lokasi_id: selectedLokasi,
+        tanggal_masuk: document.getElementById('pTanggalMasuk').value,
       },
-      userInfo: { nik: currentUser.nik, username: currentUser.username }
+      user_info: { nik: currentUser.nik, username: currentUser.username }
     });
     if (res.success) {
       // FITUR #5: tampilkan info username = NIK dan password = 123456
@@ -3078,7 +3078,7 @@ async function hapusPegawai(nik, nama) {
   if (!confirm(`Hapus pegawai ${nama} (${nik})? Aksi ini tidak dapat dibatalkan.`)) return;
   showLoading();
   try {
-    const res = await callServer('deletePegawai', { nik, userInfo: { nik: currentUser.nik, username: currentUser.username } });
+    const res = await callServer('deletePegawai', { nik, user_info: { nik: currentUser.nik, username: currentUser.username } });
     if (res.success) { showToast(res.message, 'success'); loadPegawaiList(); }
     else showToast(res.message, 'error');
   } catch (e) {} finally { hideLoading(); }
@@ -3107,7 +3107,7 @@ async function importPegawai(input) {
     if (rows.length === 0) { showToast('File kosong', 'warning'); return; }
     showLoading('Mengimpor pegawai...');
     try {
-      const res = await callServer('importPegawai', { rows, userInfo: { nik: currentUser.nik, username: currentUser.username } });
+      const res = await callServer('importPegawai', { rows, user_info: { nik: currentUser.nik, username: currentUser.username } });
       if (res.success) { showToast(res.message, 'success'); loadPegawaiList(); }
       else showToast(res.message, 'error');
     } catch (ex) { showToast('Error import', 'error'); }
@@ -3125,11 +3125,11 @@ async function uploadFoto(input) {
     try {
       const res = await callServer('uploadFotoPegawai', {
         nik: currentUser.nik, base64: e.target.result,
-        userInfo: { nik: currentUser.nik, username: currentUser.username }
+        user_info: { nik: currentUser.nik, username: currentUser.username }
       });
       if (res.success) {
         showToast('Foto berhasil diupload', 'success');
-        currentUser.fotoURL = res.url;
+        currentUser.foto_url = res.url;
         const avaEl = document.getElementById('profilAvaLarge');
         avaEl.innerHTML = `<img src="${res.url}" style="width:100%;height:100%;object-fit:cover">`;
         const sideAva = document.getElementById('sidebarAva');
@@ -3190,7 +3190,7 @@ async function loadShiftListPage() {
             <span style="font-weight:700">${s.nama}</span>
             <span class="badge ${tipeColor[s.tipe]||'badge-gray'}">${s.tipe||'-'}</span>
           </div>
-          <div style="font-size:13px;margin-top:6px">⏰ <strong>${s.jamMasuk}</strong> – <strong>${s.jamPulang}</strong></div>
+          <div style="font-size:13px;margin-top:6px">⏰ <strong>${s.jam_masuk}</strong> – <strong>${s.jam_pulang}</strong></div>
           <div style="font-size:12px;color:var(--text-muted)">${s.departemen||'Semua Departemen'}</div>
           <div style="font-size:11px;color:var(--text-muted);margin-top:3px">ID: <code>${s.id}</code></div>
         </div>
@@ -3232,7 +3232,7 @@ async function submitLokasi() {
   try {
     const res = await callServer('saveLokasi', {
       data: { id: document.getElementById('lID').value || null, nama, lat: parseFloat(lat), lng: parseFloat(lng), radius: parseInt(document.getElementById('lRadius').value), alamat: document.getElementById('lAlamat').value },
-      userInfo: { nik: currentUser.nik, username: currentUser.username }
+      user_info: { nik: currentUser.nik, username: currentUser.username }
     });
     if (res.success) { showToast(res.message, 'success'); tutupModal('modalLokasi'); loadLokasiList(); }
     else showToast(res.message, 'error');
@@ -3262,8 +3262,8 @@ function editShift(s) {
   document.getElementById('sID').value = s.id;
   document.getElementById('sNama').value = s.nama;
   document.getElementById('sDept').value = s.departemen || '';
-  document.getElementById('sJamMasuk').value = s.jamMasuk;
-  document.getElementById('sJamPulang').value = s.jamPulang;
+  document.getElementById('sJamMasuk').value = s.jam_masuk;
+  document.getElementById('sJamPulang').value = s.jam_pulang;
   document.getElementById('sTipe').value = s.tipe;
   document.getElementById('modalShiftTitle').textContent = 'Edit Shift';
   bukaModal('modalShift');
@@ -3271,14 +3271,14 @@ function editShift(s) {
 
 async function submitShift() {
   const nama = document.getElementById('sNama').value.trim();
-  const jamMasuk = document.getElementById('sJamMasuk').value;
-  const jamPulang = document.getElementById('sJamPulang').value;
-  if (!nama || !jamMasuk || !jamPulang) { showToast('Nama, Jam Masuk, Jam Pulang wajib diisi', 'warning'); return; }
+  const jam_masuk = document.getElementById('sJamMasuk').value;
+  const jam_pulang = document.getElementById('sJamPulang').value;
+  if (!nama || !jam_masuk || !jam_pulang) { showToast('Nama, Jam Masuk, Jam Pulang wajib diisi', 'warning'); return; }
   showLoading();
   try {
     const res = await callServer('saveShift', {
-      data: { id: document.getElementById('sID').value || null, nama, departemen: document.getElementById('sDept').value, jamMasuk, jamPulang, tipe: document.getElementById('sTipe').value },
-      userInfo: { nik: currentUser.nik, username: currentUser.username }
+      data: { id: document.getElementById('sID').value || null, nama, departemen: document.getElementById('sDept').value, jam_masuk, jam_pulang, tipe: document.getElementById('sTipe').value },
+      user_info: { nik: currentUser.nik, username: currentUser.username }
     });
     if (res.success) {
       showToast(res.message, 'success');
@@ -3333,10 +3333,10 @@ async function loadRekap() {
     if (!res.success) { showToast(res.message, 'error'); return; }
     const d = res.data;
     document.getElementById('rekapStats').innerHTML = `
-      <div class="stat-card" style="padding:14px"><div class="stat-icon green"><i class="fas fa-check-circle"></i></div><div><div class="stat-value">${d.totalHadir}</div><div class="stat-label">Hadir</div></div></div>
-      <div class="stat-card" style="padding:14px"><div class="stat-icon orange"><i class="fas fa-clock"></i></div><div><div class="stat-value">${d.totalTerlambat}</div><div class="stat-label">Terlambat</div></div></div>
-      <div class="stat-card" style="padding:14px"><div class="stat-icon red"><i class="fas fa-times-circle"></i></div><div><div class="stat-value">${d.totalAlpha}</div><div class="stat-label">Alpha</div></div></div>
-      <div class="stat-card" style="padding:14px"><div class="stat-icon cyan"><i class="fas fa-running"></i></div><div><div class="stat-value">${d.totalPulangCepat}</div><div class="stat-label">Pulang Cepat</div></div></div>
+      <div class="stat-card" style="padding:14px"><div class="stat-icon green"><i class="fas fa-check-circle"></i></div><div><div class="stat-value">${d.total_hadir}</div><div class="stat-label">Hadir</div></div></div>
+      <div class="stat-card" style="padding:14px"><div class="stat-icon orange"><i class="fas fa-clock"></i></div><div><div class="stat-value">${d.total_terlambat}</div><div class="stat-label">Terlambat</div></div></div>
+      <div class="stat-card" style="padding:14px"><div class="stat-icon red"><i class="fas fa-times-circle"></i></div><div><div class="stat-value">${d.total_alpha}</div><div class="stat-label">Alpha</div></div></div>
+      <div class="stat-card" style="padding:14px"><div class="stat-icon cyan"><i class="fas fa-running"></i></div><div><div class="stat-value">${d.total_pulang_cepat}</div><div class="stat-label">Pulang Cepat</div></div></div>
     `;
     document.getElementById('rekapTableWrap').innerHTML = d.detail.length === 0
       ? '<div class="empty-state"><p>Tidak ada data</p></div>'
@@ -3345,10 +3345,10 @@ async function loadRekap() {
           <td>${a.tanggal}</td>
           <td><code style="font-size:11px">${a.nik}</code></td>
           <td>${a.nama}</td>
-          <td>${a.jamMasuk || '-'}</td>
-          <td>${a.jamPulang || '-'}</td>
-          <td>${a.statusMasuk ? `<span class="badge ${a.statusMasuk.includes('Terlambat') ? 'badge-warning' : 'badge-success'}">${a.statusMasuk}</span>` : '-'}</td>
-          <td>${a.statusPulang ? `<span class="badge ${a.statusPulang.includes('Cepat') ? 'badge-warning' : 'badge-success'}">${a.statusPulang}</span>` : '-'}</td>
+          <td>${a.jam_masuk || '-'}</td>
+          <td>${a.jam_pulang || '-'}</td>
+          <td>${a.status_masuk ? `<span class="badge ${a.status_masuk.includes('Terlambat') ? 'badge-warning' : 'badge-success'}">${a.status_masuk}</span>` : '-'}</td>
+          <td>${a.status_pulang ? `<span class="badge ${a.status_pulang.includes('Cepat') ? 'badge-warning' : 'badge-success'}">${a.status_pulang}</span>` : '-'}</td>
           <td>${a.shift || '-'}</td>
         </tr>`).join('')}</tbody></table>`;
   } catch (e) { showToast('Error', 'error'); }
@@ -3380,27 +3380,27 @@ async function exportAbsensiExcel() {
     const res = await callServer('getRekapAbsensi', { bulan, tahun, nik, role });
     if (!res.success) { showToast(res.message, 'error'); return; }
     const d = res.data;
-    const namaBulan = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'][parseInt(bulan)-1];
+    const nama_bulan = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'][parseInt(bulan)-1];
     const wb = XLSX.utils.book_new();
     // Sheet Ringkasan
     const ringkasan = [
       ['REKAPITULASI ABSENSI PEGAWAI'],
-      ['Periode:', namaBulan + ' ' + tahun],
+      ['Periode:', nama_bulan + ' ' + tahun],
       ['Digenerate:', new Date().toLocaleString('id-ID')],
       [],
       ['RINGKASAN'],
-      ['Hari Kerja', d.totalHariKerja],
-      ['Total Hadir', d.totalHadir],
-      ['Terlambat', d.totalTerlambat],
-      ['Tidak Hadir (Alpha)', d.totalAlpha],
-      ['Pulang Cepat', d.totalPulangCepat],
+      ['Hari Kerja', d.total_hari_kerja],
+      ['Total Hadir', d.total_hadir],
+      ['Terlambat', d.total_terlambat],
+      ['Tidak Hadir (Alpha)', d.total_alpha],
+      ['Pulang Cepat', d.total_pulang_cepat],
     ];
     XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(ringkasan), 'Ringkasan');
     // Sheet Detail
     const header = ['No','NIK','Nama','Tanggal','Jam Masuk','Jam Pulang','Status Masuk','Status Pulang','Shift'];
-    const rows = d.detail.map((a,i) => [i+1, a.nik, a.nama, a.tanggal, a.jamMasuk||'-', a.jamPulang||'-', a.statusMasuk||'-', a.statusPulang||'-', a.shift||'-']);
+    const rows = d.detail.map((a,i) => [i+1, a.nik, a.nama, a.tanggal, a.jam_masuk||'-', a.jam_pulang||'-', a.status_masuk||'-', a.status_pulang||'-', a.shift||'-']);
     XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([header, ...rows]), 'Detail Absensi');
-    XLSX.writeFile(wb, `Rekap_Absensi_${namaBulan}_${tahun}.xlsx`);
+    XLSX.writeFile(wb, `Rekap_Absensi_${nama_bulan}_${tahun}.xlsx`);
     showToast('File Excel berhasil diunduh!', 'success');
   } catch (e) { showToast('Error: ' + e, 'error'); } finally { hideLoading(); }
 }
@@ -3417,19 +3417,19 @@ async function exportAbsensiPDF() {
     const res = await callServer('getRekapAbsensi', { bulan, tahun, nik, role });
     if (!res.success) { showToast(res.message, 'error'); return; }
     const d = res.data;
-    const namaBulan = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'][parseInt(bulan)-1];
+    const nama_bulan = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'][parseInt(bulan)-1];
     // Buat HTML untuk print/PDF
-    const persen = d.totalHariKerja > 0 ? Math.round(d.totalHadir/d.totalHariKerja*100) : 0;
+    const persen = d.total_hari_kerja > 0 ? Math.round(d.total_hadir/d.total_hari_kerja*100) : 0;
     const tableRows = d.detail.map((a,i) => `
       <tr>
         <td>${i+1}</td><td>${a.nik}</td><td>${a.nama}</td><td>${a.tanggal}</td>
-        <td>${a.jamMasuk||'-'}</td><td>${a.jamPulang||'-'}</td>
-        <td style="color:${(a.statusMasuk||'').includes('Terlambat')?'#e6a800':'#059669'}">${a.statusMasuk||'-'}</td>
-        <td style="color:${(a.statusPulang||'').includes('Cepat')?'#e6a800':'#059669'}">${a.statusPulang||'-'}</td>
+        <td>${a.jam_masuk||'-'}</td><td>${a.jam_pulang||'-'}</td>
+        <td style="color:${(a.status_masuk||'').includes('Terlambat')?'#e6a800':'#059669'}">${a.status_masuk||'-'}</td>
+        <td style="color:${(a.status_pulang||'').includes('Cepat')?'#e6a800':'#059669'}">${a.status_pulang||'-'}</td>
         <td>${a.shift||'-'}</td>
       </tr>`).join('');
     const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
-      <title>Rekap Absensi ${namaBulan} ${tahun}</title>
+      <title>Rekap Absensi ${nama_bulan} ${tahun}</title>
       <style>
         body{font-family:Arial,sans-serif;margin:20px;color:#1a2744;font-size:11px}
         h1{font-size:16px;margin-bottom:4px;color:#0f4c8a} h2{font-size:13px;margin-bottom:12px;color:#6b7a99}
@@ -3445,14 +3445,14 @@ async function exportAbsensiPDF() {
       </style>
     </head><body>
       <h1>REKAPITULASI ABSENSI PEGAWAI</h1>
-      <h2>Periode: ${namaBulan} ${tahun} &nbsp;|&nbsp; Digenerate: ${new Date().toLocaleString('id-ID')}</h2>
+      <h2>Periode: ${nama_bulan} ${tahun} &nbsp;|&nbsp; Digenerate: ${new Date().toLocaleString('id-ID')}</h2>
       <div class="summary">
         <div class="sum-box"><div class="persen">${persen}%</div><div class="sum-lbl">Tingkat Kehadiran</div></div>
-        <div class="sum-box"><div class="sum-val">${d.totalHariKerja}</div><div class="sum-lbl">Hari Kerja</div></div>
-        <div class="sum-box"><div class="sum-val" style="color:#06d6a0">${d.totalHadir}</div><div class="sum-lbl">Hadir</div></div>
-        <div class="sum-box"><div class="sum-val" style="color:#e6a800">${d.totalTerlambat}</div><div class="sum-lbl">Terlambat</div></div>
-        <div class="sum-box"><div class="sum-val" style="color:#ef476f">${d.totalAlpha}</div><div class="sum-lbl">Alpha</div></div>
-        <div class="sum-box"><div class="sum-val" style="color:#00b4d8">${d.totalPulangCepat}</div><div class="sum-lbl">Pulang Cepat</div></div>
+        <div class="sum-box"><div class="sum-val">${d.total_hari_kerja}</div><div class="sum-lbl">Hari Kerja</div></div>
+        <div class="sum-box"><div class="sum-val" style="color:#06d6a0">${d.total_hadir}</div><div class="sum-lbl">Hadir</div></div>
+        <div class="sum-box"><div class="sum-val" style="color:#e6a800">${d.total_terlambat}</div><div class="sum-lbl">Terlambat</div></div>
+        <div class="sum-box"><div class="sum-val" style="color:#ef476f">${d.total_alpha}</div><div class="sum-lbl">Alpha</div></div>
+        <div class="sum-box"><div class="sum-val" style="color:#00b4d8">${d.total_pulang_cepat}</div><div class="sum-lbl">Pulang Cepat</div></div>
       </div>
       <table><thead><tr><th>No</th><th>NIK</th><th>Nama</th><th>Tanggal</th><th>Masuk</th><th>Pulang</th><th>Status Masuk</th><th>Status Pulang</th><th>Shift</th></tr></thead>
       <tbody>${tableRows}</tbody></table>
@@ -3487,10 +3487,10 @@ async function initLaporanAdminPage() {
 async function loadLaporanAdmin() {
   const bulan = document.getElementById('laporanAdminBulan').value;
   const tahun = document.getElementById('laporanAdminTahun').value;
-  const targetNIK = document.getElementById('laporanAdminNIK').value || null;
+  const target_nik = document.getElementById('laporanAdminNIK').value || null;
   showLoading();
   try {
-    const res = await callServer('getLaporanKerja', { nik: currentUser.nik, role: currentUser.role, bulan, tahun, targetNIK });
+    const res = await callServer('getLaporanKerja', { nik: currentUser.nik, role: currentUser.role, bulan, tahun, target_nik });
     const el = document.getElementById('laporanAdminList');
     if (!res.success || res.data.length === 0) {
       el.innerHTML = '<div class="empty-state"><i class="fas fa-file-alt"></i><p>Tidak ada laporan</p></div>'; return;
@@ -3501,9 +3501,9 @@ async function loadLaporanAdmin() {
         <div style="display:flex;justify-content:space-between;align-items:start;margin-bottom:8px">
           <div>
             <div style="font-weight:700">${l.nama} <code style="font-size:11px;color:var(--text-muted)">(${l.nik})</code></div>
-            <div style="font-size:13px;color:var(--text-muted)">${l.tanggal} ${l.jamMulai ? '| ' + l.jamMulai + ' - ' + (l.jamSelesai || '...') : ''}</div>
+            <div style="font-size:13px;color:var(--text-muted)">${l.tanggal} ${l.jam_mulai ? '| ' + l.jam_mulai + ' - ' + (l.jam_selesai || '...') : ''}</div>
           </div>
-          ${l.fotoURL ? `<a href="${l.fotoURL}" target="_blank"><img src="${l.fotoURL}" style="width:48px;height:48px;object-fit:cover;border-radius:8px"></a>` : ''}
+          ${l.foto_url ? `<a href="${l.foto_url}" target="_blank"><img src="${l.foto_url}" style="width:48px;height:48px;object-fit:cover;border-radius:8px"></a>` : ''}
         </div>
         <p style="font-size:13px">${l.deskripsi}</p>
       </div>`).join('');
@@ -3551,7 +3551,7 @@ function loadProfil() {
   document.getElementById('profilRole').textContent = u.role;
 
   const avaEl = document.getElementById('profilAvaLarge');
-  if (u.fotoURL) avaEl.innerHTML = `<img src="${u.fotoURL}" style="width:100%;height:100%;object-fit:cover">`;
+  if (u.foto_url) avaEl.innerHTML = `<img src="${u.foto_url}" style="width:100%;height:100%;object-fit:cover">`;
   else avaEl.textContent = (u.nama || 'U').charAt(0).toUpperCase();
 
   document.getElementById('profilDetail').innerHTML = `
@@ -3562,7 +3562,7 @@ function loadProfil() {
         ['fa-briefcase', 'Jabatan', u.jabatan || '-'],
         ['fa-building', 'Departemen', u.departemen || '-'],
         ['fa-envelope', 'Email', u.email || '-'],
-        ['fa-clock', 'Tipe Waktu Kerja', u.tipeWaktu || '-'],
+        ['fa-clock', 'Tipe Waktu Kerja', u.tipe_waktu || '-'],
         ['fa-shield-alt', 'Role', u.role],
       ].map(([ic, lab, val]) => `
         <div style="display:flex;align-items:center;gap:12px;padding:10px;background:var(--bg);border-radius:8px">
@@ -3596,7 +3596,7 @@ async function loadNotifikasi() {
     const res = await callServer('getNotifikasi', { nik: currentUser.nik });
     if (!res.success) return;
     allNotif = res.data;
-    const unread = allNotif.filter(n => !n.isRead).length;
+    const unread = allNotif.filter(n => !n.is_read).length;
     const badge = document.getElementById('notifBadge');
     if (unread > 0) { badge.style.display = 'flex'; badge.textContent = unread > 9 ? '9+' : unread; }
     else badge.style.display = 'none';
@@ -3610,7 +3610,7 @@ function renderNotifList() {
     el.innerHTML = '<div class="empty-state" style="padding:30px"><i class="far fa-bell" style="font-size:32px"></i><p style="font-size:13px">Tidak ada notifikasi</p></div>'; return;
   }
   el.innerHTML = allNotif.slice(0, 20).map(n => `
-    <div class="notif-item ${n.isRead ? '' : 'unread'}" onclick="readNotif('${n.id}')">
+    <div class="notif-item ${n.is_read ? '' : 'unread'}" onclick="readNotif('${n.id}')">
       <div class="notif-title">${n.judul}</div>
       <div class="notif-msg">${n.pesan}</div>
       <div class="notif-time">${n.createdAt}</div>
@@ -3623,7 +3623,7 @@ async function readNotif(id) {
 }
 
 function markAllRead() {
-  allNotif.filter(n => !n.isRead).forEach(n => callServer('markNotifRead', { id: n.id, nik: currentUser.nik }));
+  allNotif.filter(n => !n.is_read).forEach(n => callServer('markNotifRead', { id: n.id, nik: currentUser.nik }));
   setTimeout(loadNotifikasi, 500);
 }
 
@@ -3692,7 +3692,7 @@ async function loadShiftCache() {
 async function loadPegawaiCache() {
   try {
     const res = await callServer('getPegawaiList', {});
-    pegawaiListCache = res.success ? res.data.filter(p => p.status === 'Aktif' && p.tipeWaktu === 'Shift') : [];
+    pegawaiListCache = res.success ? res.data.filter(p => p.status === 'Aktif' && p.tipe_waktu === 'Shift') : [];
   } catch (e) {}
 }
 
@@ -3719,7 +3719,7 @@ function populateJadwalSelects() {
     shiftListCache.forEach(s => {
       const opt = document.createElement('option');
       opt.value = s.id;
-      opt.textContent = `${s.nama} | ${s.jamMasuk}–${s.jamPulang}${s.departemen ? ' ['+s.departemen+']' : ''}`;
+      opt.textContent = `${s.nama} | ${s.jam_masuk}–${s.jam_pulang}${s.departemen ? ' ['+s.departemen+']' : ''}`;
       sel.appendChild(opt);
     });
   });
@@ -3776,25 +3776,25 @@ async function loadJadwalMingguIni(nikOverride) {
       </div>
       <div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:10px">
         ${res.data.map(d => {
-          const nm = d.namaShift || '';
+          const nm = d.nama_shift || '';
           const tipe = nm === 'Non-Shift' ? 'Non-Shift' : nm === 'Fleksibel' ? 'Fleksibel'
-            : (nm.toLowerCase().includes('pagi') || (d.jamMasuk && d.jamMasuk < '12:00')) ? 'Pagi'
-            : (d.jamMasuk && (d.jamMasuk >= '18:00' || d.jamMasuk <= '04:00')) ? 'Malam' : 'Sore';
-          const isHariIni   = d.isHariIni;
-          const isHariKerja = !['Minggu','Sabtu'].includes(d.namaHari);
+            : (nm.toLowerCase().includes('pagi') || (d.jam_masuk && d.jam_masuk < '12:00')) ? 'Pagi'
+            : (d.jam_masuk && (d.jam_masuk >= '18:00' || d.jam_masuk <= '04:00')) ? 'Malam' : 'Sore';
+          const is_hari_ini   = d.is_hari_ini;
+          const isHariKerja = !['Minggu','Sabtu'].includes(d.nama_hari);
           const isFromJadwal = d.sumber === 'jadwal_harian';
           const clr = tipeColor[tipe] || '#6b7a99';
           const bg  = tipeBg[tipe]   || 'rgba(0,0,0,0.03)';
-          return `<div style="border-radius:14px;border:2px solid ${isHariIni ? 'var(--primary)' : isFromJadwal ? clr+'60' : 'var(--border)'};background:${isHariIni ? 'linear-gradient(135deg,rgba(15,76,138,0.06),rgba(0,180,216,0.04))' : isHariKerja ? 'white' : '#f8f9fb'};padding:14px 8px;text-align:center;position:relative;${isHariIni ? 'box-shadow:0 4px 20px rgba(15,76,138,0.15)' : ''}">
-            ${isHariIni ? `<div style="position:absolute;top:-11px;left:50%;transform:translateX(-50%);background:var(--primary);color:white;font-size:9px;font-weight:800;padding:2px 8px;border-radius:10px;white-space:nowrap;letter-spacing:0.5px">HARI INI</div>` : ''}
+          return `<div style="border-radius:14px;border:2px solid ${is_hari_ini ? 'var(--primary)' : isFromJadwal ? clr+'60' : 'var(--border)'};background:${is_hari_ini ? 'linear-gradient(135deg,rgba(15,76,138,0.06),rgba(0,180,216,0.04))' : isHariKerja ? 'white' : '#f8f9fb'};padding:14px 8px;text-align:center;position:relative;${is_hari_ini ? 'box-shadow:0 4px 20px rgba(15,76,138,0.15)' : ''}">
+            ${is_hari_ini ? `<div style="position:absolute;top:-11px;left:50%;transform:translateX(-50%);background:var(--primary);color:white;font-size:9px;font-weight:800;padding:2px 8px;border-radius:10px;white-space:nowrap;letter-spacing:0.5px">HARI INI</div>` : ''}
             ${isFromJadwal ? `<div style="position:absolute;top:6px;right:6px;width:7px;height:7px;border-radius:50%;background:${clr}"></div>` : ''}
-            <div style="font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:0.5px">${d.namaHari.toUpperCase()}</div>
+            <div style="font-size:10px;font-weight:700;color:var(--text-muted);letter-spacing:0.5px">${d.nama_hari.toUpperCase()}</div>
             <div style="font-size:13px;font-weight:800;margin:4px 0;color:${isHariKerja ? 'var(--text)' : 'var(--text-muted)'}">${d.tanggal.split('-').slice(1).join('/')}</div>
             ${isHariKerja ? `
               <div style="background:${bg};border-radius:8px;padding:8px 4px;margin-top:8px">
-                <div style="font-size:10px;font-weight:800;color:${clr};line-height:1.3">${d.namaShift || '-'}</div>
-                <div style="font-size:12px;font-weight:700;margin-top:3px">${d.jamMasuk || '-'}</div>
-                <div style="font-size:10px;color:var(--text-muted)">s/d ${d.jamPulang || '-'}</div>
+                <div style="font-size:10px;font-weight:800;color:${clr};line-height:1.3">${d.nama_shift || '-'}</div>
+                <div style="font-size:12px;font-weight:700;margin-top:3px">${d.jam_masuk || '-'}</div>
+                <div style="font-size:10px;color:var(--text-muted)">s/d ${d.jam_pulang || '-'}</div>
               </div>
               ${canEdit ? `<button onclick="editJadwalHarian('${nik || currentUser.nik}','${d.tanggal}')" style="margin-top:8px;width:100%;padding:4px;border:1px solid var(--border);border-radius:6px;background:white;cursor:pointer;font-size:10px;font-weight:600;color:var(--primary);transition:all 0.15s" onmouseover="this.style.background='var(--primary)';this.style.color='white'" onmouseout="this.style.background='white';this.style.color='var(--primary)'"><i class="fas fa-edit"></i> Ubah</button>` : ''}
             ` : `<div style="margin-top:10px;font-size:11px;color:var(--text-muted)">Libur</div>`}
@@ -3811,13 +3811,13 @@ function editJadwalHarian(nik, tanggal) {
 }
 
 function previewShift() {
-  const shiftID = document.getElementById('jadwalShiftSel').value;
+  const shift_id = document.getElementById('jadwalShiftSel').value;
   const preview = document.getElementById('jadwalShiftPreview');
-  if (!shiftID) { preview.style.display = 'none'; return; }
-  const shift = shiftListCache.find(s => s.id === shiftID);
+  if (!shift_id) { preview.style.display = 'none'; return; }
+  const shift = shiftListCache.find(s => s.id === shift_id);
   if (!shift) { preview.style.display = 'none'; return; }
   document.getElementById('previewNamaShift').textContent = shift.nama;
-  document.getElementById('previewJamShift').textContent = `⏰ ${shift.jamMasuk} – ${shift.jamPulang}`;
+  document.getElementById('previewJamShift').textContent = `⏰ ${shift.jam_masuk} – ${shift.jam_pulang}`;
   document.getElementById('previewDeptShift').textContent = shift.departemen || 'Semua Departemen';
   preview.style.display = 'block';
 }
@@ -3825,11 +3825,11 @@ function previewShift() {
 async function submitJadwalSatu() {
   const nik = document.getElementById('jadwalPegawaiSel').value;
   const tanggal = document.getElementById('jadwalTanggal').value;
-  const shiftID = document.getElementById('jadwalShiftSel').value;
-  if (!nik || !tanggal || !shiftID) { showToast('Pegawai, Tanggal, dan Shift wajib diisi', 'warning'); return; }
+  const shift_id = document.getElementById('jadwalShiftSel').value;
+  if (!nik || !tanggal || !shift_id) { showToast('Pegawai, Tanggal, dan Shift wajib diisi', 'warning'); return; }
   showLoading('Menyimpan jadwal...');
   try {
-    const res = await callServer('saveJadwalShift', { nik, tanggal, shiftID, userInfo: { nik: currentUser.nik, username: currentUser.username } });
+    const res = await callServer('saveJadwalShift', { nik, tanggal, shift_id, user_info: { nik: currentUser.nik, username: currentUser.username } });
     if (res.success) {
       showToast(res.message, 'success');
       document.getElementById('jadwalNIKFilter').value = nik;
@@ -3861,7 +3861,7 @@ function renderRotasiList() {
       <span style="font-size:12px;font-weight:700;color:var(--text-muted);width:20px">${idx+1}.</span>
       <select class="form-control" style="font-size:12px;flex:1" onchange="rotasiItems[${idx}]=this.value">
         <option value="">-- Pilih Shift --</option>
-        ${shiftListCache.map(s => `<option value="${s.id}" ${s.id===val?'selected':''}>${s.nama} | ${s.jamMasuk}–${s.jamPulang}</option>`).join('')}
+        ${shiftListCache.map(s => `<option value="${s.id}" ${s.id===val?'selected':''}>${s.nama} | ${s.jam_masuk}–${s.jam_pulang}</option>`).join('')}
       </select>
       <button onclick="hapusRotasiItem(${idx})" style="padding:6px 10px;border:1px solid var(--danger);border-radius:6px;background:white;color:var(--danger);cursor:pointer;font-size:12px;flex-shrink:0">✕</button>
     </div>`).join('');
@@ -3878,7 +3878,7 @@ function renderCustomHariList() {
       <span style="font-size:13px;font-weight:600;width:55px;flex-shrink:0">${h}</span>
       <select class="form-control" style="font-size:12px;flex:1" id="customHari${i}">
         <option value="">Libur / Tidak Kerja</option>
-        ${shiftListCache.map(s => `<option value="${s.id}">${s.nama} | ${s.jamMasuk}–${s.jamPulang}</option>`).join('')}
+        ${shiftListCache.map(s => `<option value="${s.id}">${s.nama} | ${s.jam_masuk}–${s.jam_pulang}</option>`).join('')}
       </select>
     </div>`).join('');
 }
@@ -3903,20 +3903,20 @@ async function previewDanSubmitMasal() {
 
   const items = [];
   if (mode === 'same') {
-    const shiftID = document.getElementById('masalShiftSame').value;
-    if (!shiftID) { showToast('Pilih shift terlebih dahulu', 'warning'); return; }
-    tanggals.forEach(tgl => items.push({ nik, tanggal: tgl, shiftID }));
+    const shift_id = document.getElementById('masalShiftSame').value;
+    if (!shift_id) { showToast('Pilih shift terlebih dahulu', 'warning'); return; }
+    tanggals.forEach(tgl => items.push({ nik, tanggal: tgl, shift_id }));
   } else if (mode === 'rotasi') {
     const filled = rotasiItems.filter(r => r);
     if (filled.length === 0) { showToast('Tambahkan minimal 1 shift untuk rotasi', 'warning'); return; }
-    tanggals.forEach((tgl, idx) => items.push({ nik, tanggal: tgl, shiftID: filled[idx % filled.length] }));
+    tanggals.forEach((tgl, idx) => items.push({ nik, tanggal: tgl, shift_id: filled[idx % filled.length] }));
   } else if (mode === 'custom') {
     tanggals.forEach(tgl => {
       const day = new Date(tgl).getDay();
       const hariIdx = day === 0 ? null : day - 1;
       if (hariIdx === null || hariIdx > 5) return;
-      const shiftID = document.getElementById('customHari' + hariIdx)?.value;
-      if (shiftID) items.push({ nik, tanggal: tgl, shiftID });
+      const shift_id = document.getElementById('customHari' + hariIdx)?.value;
+      if (shift_id) items.push({ nik, tanggal: tgl, shift_id });
     });
   }
   if (items.length === 0) { showToast('Tidak ada jadwal yang akan dibuat', 'warning'); return; }
@@ -3924,7 +3924,7 @@ async function previewDanSubmitMasal() {
 
   showLoading(`Menyimpan ${items.length} jadwal...`);
   try {
-    const res = await callServer('saveBulkJadwalShift', { items, userInfo: { nik: currentUser.nik, username: currentUser.username } });
+    const res = await callServer('saveBulkJadwalShift', { items, user_info: { nik: currentUser.nik, username: currentUser.username } });
     if (res.success) {
       showToast(res.message, 'success');
       document.getElementById('jadwalNIKFilter').value = nik;
@@ -3942,27 +3942,27 @@ async function loadRiwayatJadwal() {
   const wrap = document.getElementById('riwayatJadwalTable');
   wrap.innerHTML = '<div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Memuat...</p></div>';
   try {
-    const res = await callServer('getJadwalShiftList', { nik: nik || null, role: currentUser.role, tanggalMulai: tglMulai, tanggalSelesai: tglSelesai });
+    const res = await callServer('getJadwalShiftList', { nik: nik || null, role: currentUser.role, tanggal_mulai: tglMulai, tanggal_selesai: tglSelesai });
     if (!res.success || res.data.length === 0) {
       wrap.innerHTML = '<div class="empty-state"><i class="fas fa-calendar" style="opacity:0.2"></i><p>Tidak ada data jadwal</p></div>'; return;
     }
-    const namaHariArr = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
+    const nama_hariArr = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
     wrap.innerHTML = `<table><thead><tr>
       <th>NIK</th><th>Nama</th><th>Tanggal</th><th>Hari</th><th>Nama Shift</th><th>Jam Masuk</th><th>Jam Pulang</th><th>Aksi</th>
     </tr></thead><tbody>
     ${res.data.map(j => {
-      const namaHari = namaHariArr[new Date(j.tanggal).getDay()];
-      const cls = j.namaShift.toLowerCase().includes('pagi') ? 'badge-warning'
-        : j.namaShift.toLowerCase().includes('sore') ? 'badge-info'
-        : j.namaShift.toLowerCase().includes('malam') ? 'badge-gray' : 'badge-success';
+      const nama_hari = nama_hariArr[new Date(j.tanggal).getDay()];
+      const cls = j.nama_shift.toLowerCase().includes('pagi') ? 'badge-warning'
+        : j.nama_shift.toLowerCase().includes('sore') ? 'badge-info'
+        : j.nama_shift.toLowerCase().includes('malam') ? 'badge-gray' : 'badge-success';
       return `<tr>
         <td><code style="font-size:11px">${j.nik}</code></td>
         <td>${j.nama}</td>
         <td>${j.tanggal}</td>
-        <td style="font-weight:600">${namaHari}</td>
-        <td><span class="badge ${cls}">${j.namaShift}</span></td>
-        <td><strong>${j.jamMasuk}</strong></td>
-        <td>${j.jamPulang}</td>
+        <td style="font-weight:600">${nama_hari}</td>
+        <td><span class="badge ${cls}">${j.nama_shift}</span></td>
+        <td><strong>${j.jam_masuk}</strong></td>
+        <td>${j.jam_pulang}</td>
         <td><button class="btn btn-danger btn-sm btn-icon" onclick="hapusJadwal('${j.id}')" title="Hapus"><i class="fas fa-trash"></i></button></td>
       </tr>`;
     }).join('')}
@@ -3974,7 +3974,7 @@ async function hapusJadwal(id) {
   if (!confirm('Hapus jadwal ini?')) return;
   showLoading();
   try {
-    const res = await callServer('deleteJadwalShift', { id, userInfo: { nik: currentUser.nik, username: currentUser.username } });
+    const res = await callServer('deleteJadwalShift', { id, user_info: { nik: currentUser.nik, username: currentUser.username } });
     if (res.success) { showToast(res.message, 'success'); loadRiwayatJadwal(); }
     else showToast(res.message, 'error');
   } catch (e) {} finally { hideLoading(); }
@@ -3992,7 +3992,7 @@ function downloadTemplateJadwal() {
   XLSX.utils.book_append_sheet(wb, ws, 'JadwalShift');
   const wsInfo = XLSX.utils.aoa_to_sheet([
     ['Daftar ShiftID yang Tersedia (salin dari sini ke kolom ShiftID)'],['ID','Nama Shift','Jam Masuk','Jam Pulang','Departemen'],
-    ...shiftListCache.map(s => [s.id, s.nama, s.jamMasuk, s.jamPulang, s.departemen || 'Semua'])
+    ...shiftListCache.map(s => [s.id, s.nama, s.jam_masuk, s.jam_pulang, s.departemen || 'Semua'])
   ]);
   XLSX.utils.book_append_sheet(wb, wsInfo, 'Info Shift');
   XLSX.writeFile(wb, 'Template_Jadwal_Shift.xlsx');
@@ -4010,7 +4010,7 @@ async function importJadwal(input) {
     if (rows.length === 0) { showToast('File kosong', 'warning'); return; }
     showLoading('Mengimpor jadwal...');
     try {
-      const res = await callServer('importJadwalShift', { rows, userInfo: { nik: currentUser.nik, username: currentUser.username } });
+      const res = await callServer('importJadwalShift', { rows, user_info: { nik: currentUser.nik, username: currentUser.username } });
       if (res.success) { showToast(res.message, 'success'); loadRiwayatJadwal(); }
       else showToast(res.message, 'error');
     } catch (ex) { showToast('Error import', 'error'); }
