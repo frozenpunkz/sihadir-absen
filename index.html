@@ -1854,7 +1854,7 @@ let allNotif = [];
 // Ganti dengan URL Worker kamu
 // Format: https://sihadir-proxy.USERNAME.workers.dev
 // ============================================================
-const WORKER_URL = 'https://sihadir-proxy.techrover.workers.dev'; // ← GANTI
+const WORKER_URL = 'https://sihadir-proxy.USERNAME.workers.dev'; // ← GANTI
 
 // ============================================================
 // UTILITY — callServer via Cloudflare Worker (fetch)
@@ -3323,63 +3323,97 @@ async function initRekapPage() {
 async function loadRekap() {
   const bulan = document.getElementById('rekapBulan').value;
   const tahun = document.getElementById('rekapTahun').value;
-  // FIX: jika admin dan tidak pilih NIK spesifik, kirim role asli (bukan 'Pegawai')
   const selectedNIK = document.getElementById('rekapNIK').value;
-  const nik = selectedNIK || currentUser.nik;
+  const nik  = selectedNIK || currentUser.nik;
   const role = selectedNIK ? 'Pegawai' : currentUser.role;
+  if (!bulan || !tahun) { showToast('Pilih bulan dan tahun terlebih dahulu.', 'warning'); return; }
   showLoading();
   try {
-    const res = await callServer('getRekapAbsensi', { nik, role, bulan, tahun });
+    const res = await callServer('getRekapAbsensi', { nik, role, bulan, tahun, target_nik: selectedNIK || null });
     if (!res.success) { showToast(res.message, 'error'); return; }
-    const d = res.data;
+    const d      = res.data;
+    const detail = d.detail || [];
     document.getElementById('rekapStats').innerHTML = `
       <div class="stat-card" style="padding:14px"><div class="stat-icon green"><i class="fas fa-check-circle"></i></div><div><div class="stat-value">${d.total_hadir}</div><div class="stat-label">Hadir</div></div></div>
       <div class="stat-card" style="padding:14px"><div class="stat-icon orange"><i class="fas fa-clock"></i></div><div><div class="stat-value">${d.total_terlambat}</div><div class="stat-label">Terlambat</div></div></div>
       <div class="stat-card" style="padding:14px"><div class="stat-icon red"><i class="fas fa-times-circle"></i></div><div><div class="stat-value">${d.total_alpha}</div><div class="stat-label">Alpha</div></div></div>
       <div class="stat-card" style="padding:14px"><div class="stat-icon cyan"><i class="fas fa-running"></i></div><div><div class="stat-value">${d.total_pulang_cepat}</div><div class="stat-label">Pulang Cepat</div></div></div>
     `;
-    document.getElementById('rekapTableWrap').innerHTML = d.detail.length === 0
-      ? '<div class="empty-state"><p>Tidak ada data</p></div>'
-      : `<table><thead><tr><th>Tanggal</th><th>NIK</th><th>Nama</th><th>Jam Masuk</th><th>Jam Pulang</th><th>Status Masuk</th><th>Status Pulang</th><th>Shift</th></tr></thead>
-        <tbody>${d.detail.map(a => `<tr>
-          <td>${a.tanggal}</td>
+    document.getElementById('rekapTableWrap').innerHTML = detail.length === 0
+      ? '<div class="empty-state"><i class="fas fa-calendar-times"></i><p>Tidak ada data absensi pada periode ini</p></div>'
+      : `<table><thead><tr>
+          <th>Tanggal</th><th>NIK</th><th>Nama</th>
+          <th>Jam Masuk</th><th>Jam Pulang</th>
+          <th>Status Masuk</th><th>Status Pulang</th><th>Shift</th>
+        </tr></thead><tbody>
+        ${detail.map(a => `<tr>
+          <td style="white-space:nowrap">${a.tanggal || '-'}</td>
           <td><code style="font-size:11px">${a.nik}</code></td>
-          <td>${a.nama}</td>
-          <td>${a.jam_masuk || '-'}</td>
+          <td>${a.nama || '-'}</td>
+          <td>${a.jam_masuk  || '-'}</td>
           <td>${a.jam_pulang || '-'}</td>
-          <td>${a.status_masuk ? `<span class="badge ${a.status_masuk.includes('Terlambat') ? 'badge-warning' : 'badge-success'}">${a.status_masuk}</span>` : '-'}</td>
+          <td>${a.status_masuk  ? `<span class="badge ${a.status_masuk.includes('Terlambat')  ? 'badge-warning' : 'badge-success'}">${a.status_masuk}</span>`  : '-'}</td>
           <td>${a.status_pulang ? `<span class="badge ${a.status_pulang.includes('Cepat') ? 'badge-warning' : 'badge-success'}">${a.status_pulang}</span>` : '-'}</td>
-          <td>${a.shift || '-'}</td>
-        </tr>`).join('')}</tbody></table>`;
-  } catch (e) { showToast('Error', 'error'); }
-  finally { hideLoading(); }
+          <td>${a.shift || a.shift_nama || '-'}</td>
+        </tr>`).join('')}
+        </tbody></table>`;
+  } catch (e) {
+    console.error('[loadRekap]', e);
+    showToast('Gagal memuat rekap: ' + (e.message || e), 'error');
+  } finally { hideLoading(); }
 }
 
 async function exportAbsensi() {
-  const bulan = document.getElementById('rekapBulan').value;
-  const tahun = document.getElementById('rekapTahun').value;
-  const nik = document.getElementById('rekapNIK').value || currentUser.nik;
-  const role = document.getElementById('rekapNIK').value ? 'Pegawai' : currentUser.role;
-  showLoading('Membuat sheet rekap di Google Sheets...');
+  const bulan       = document.getElementById('rekapBulan').value;
+  const tahun       = document.getElementById('rekapTahun').value;
+  const selectedNIK = document.getElementById('rekapNIK').value;
+  const nik         = selectedNIK || currentUser.nik;
+  const role        = selectedNIK ? 'Pegawai' : currentUser.role;
+  if (!bulan || !tahun) { showToast('Pilih bulan dan tahun terlebih dahulu.', 'warning'); return; }
+  showLoading('Menyiapkan data export...');
   try {
-    const res = await callServer('exportAbsensiSheet', { bulan, tahun, nik, role });
-    if (res.success) { showToast(res.message + ' Klik untuk buka.', 'success'); if (res.url) window.open(res.url, '_blank'); }
-    else showToast(res.message, 'error');
-  } catch (e) { showToast('Error export', 'error'); } finally { hideLoading(); }
+    const res = await callServer('getRekapAbsensi', { nik, role, bulan, tahun, target_nik: selectedNIK || null });
+    if (!res.success) { showToast(res.message, 'error'); return; }
+    const d          = res.data;
+    const detail     = d.detail || [];
+    const nama_bulan = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'][parseInt(bulan)-1];
+
+    // Export ke Excel pakai SheetJS
+    const wb   = XLSX.utils.book_new();
+    const rows = [
+      ['Rekap Absensi', nama_bulan + ' ' + tahun],
+      [],
+      ['Total Hadir', d.total_hadir],
+      ['Total Terlambat', d.total_terlambat],
+      ['Total Alpha', d.total_alpha],
+      ['Total Pulang Cepat', d.total_pulang_cepat],
+      [],
+      ['Tanggal','NIK','Nama','Jam Masuk','Jam Pulang','Status Masuk','Status Pulang','Shift'],
+      ...detail.map(a => [a.tanggal, a.nik, a.nama, a.jam_masuk||'', a.jam_pulang||'', a.status_masuk||'', a.status_pulang||'', a.shift||a.shift_nama||'']),
+    ];
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(rows), 'Rekap');
+    XLSX.writeFile(wb, `Rekap_Absensi_${nama_bulan}_${tahun}.xlsx`);
+    showToast('Export berhasil!', 'success');
+  } catch (e) {
+    console.error('[exportAbsensi]', e);
+    showToast('Gagal export: ' + (e.message || e), 'error');
+  } finally { hideLoading(); }
 }
 
 // FIX FITUR #6: Download Excel langsung dari data yang sudah ditampilkan
 async function exportAbsensiExcel() {
-  const bulan = document.getElementById('rekapBulan').value;
-  const tahun = document.getElementById('rekapTahun').value;
-  const nik = document.getElementById('rekapNIK').value || currentUser.nik;
-  const role = document.getElementById('rekapNIK').value ? 'Pegawai' : currentUser.role;
+  const bulan       = document.getElementById('rekapBulan').value;
+  const tahun       = document.getElementById('rekapTahun').value;
+  const selectedNIK = document.getElementById('rekapNIK').value;
+  const nik         = selectedNIK || currentUser.nik;
+  const role        = selectedNIK ? 'Pegawai' : currentUser.role;
   if (!bulan || !tahun) { showToast('Pilih bulan dan tahun terlebih dahulu', 'warning'); return; }
   showLoading('Menyiapkan file Excel...');
   try {
-    const res = await callServer('getRekapAbsensi', { bulan, tahun, nik, role });
+    const res = await callServer('getRekapAbsensi', { bulan, tahun, nik, role, target_nik: selectedNIK || null });
     if (!res.success) { showToast(res.message, 'error'); return; }
-    const d = res.data;
+    const d      = res.data;
+    const detail = d.detail || [];
     const nama_bulan = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'][parseInt(bulan)-1];
     const wb = XLSX.utils.book_new();
     // Sheet Ringkasan
@@ -3398,35 +3432,37 @@ async function exportAbsensiExcel() {
     XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(ringkasan), 'Ringkasan');
     // Sheet Detail
     const header = ['No','NIK','Nama','Tanggal','Jam Masuk','Jam Pulang','Status Masuk','Status Pulang','Shift'];
-    const rows = d.detail.map((a,i) => [i+1, a.nik, a.nama, a.tanggal, a.jam_masuk||'-', a.jam_pulang||'-', a.status_masuk||'-', a.status_pulang||'-', a.shift||'-']);
+    const rows   = detail.map((a,i) => [i+1, a.nik, a.nama||'', a.tanggal, a.jam_masuk||'-', a.jam_pulang||'-', a.status_masuk||'-', a.status_pulang||'-', a.shift||a.shift_nama||'-']);
     XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([header, ...rows]), 'Detail Absensi');
     XLSX.writeFile(wb, `Rekap_Absensi_${nama_bulan}_${tahun}.xlsx`);
     showToast('File Excel berhasil diunduh!', 'success');
-  } catch (e) { showToast('Error: ' + e, 'error'); } finally { hideLoading(); }
+  } catch (e) { showToast('Error: ' + (e.message||e), 'error'); } finally { hideLoading(); }
 }
 
 // FIX FITUR #6: Download PDF dari data rekap
 async function exportAbsensiPDF() {
-  const bulan = document.getElementById('rekapBulan').value;
-  const tahun = document.getElementById('rekapTahun').value;
-  const nik = document.getElementById('rekapNIK').value || currentUser.nik;
-  const role = document.getElementById('rekapNIK').value ? 'Pegawai' : currentUser.role;
+  const bulan       = document.getElementById('rekapBulan').value;
+  const tahun       = document.getElementById('rekapTahun').value;
+  const selectedNIK = document.getElementById('rekapNIK').value;
+  const nik         = selectedNIK || currentUser.nik;
+  const role        = selectedNIK ? 'Pegawai' : currentUser.role;
   if (!bulan || !tahun) { showToast('Pilih bulan dan tahun terlebih dahulu', 'warning'); return; }
   showLoading('Menyiapkan file PDF...');
   try {
-    const res = await callServer('getRekapAbsensi', { bulan, tahun, nik, role });
+    const res = await callServer('getRekapAbsensi', { bulan, tahun, nik, role, target_nik: selectedNIK || null });
     if (!res.success) { showToast(res.message, 'error'); return; }
-    const d = res.data;
+    const d      = res.data;
+    const detail = d.detail || [];
     const nama_bulan = ['Januari','Februari','Maret','April','Mei','Juni','Juli','Agustus','September','Oktober','November','Desember'][parseInt(bulan)-1];
     // Buat HTML untuk print/PDF
-    const persen = d.total_hari_kerja > 0 ? Math.round(d.total_hadir/d.total_hari_kerja*100) : 0;
-    const tableRows = d.detail.map((a,i) => `
+    const persen    = d.total_hari_kerja > 0 ? Math.round(d.total_hadir/d.total_hari_kerja*100) : 0;
+    const tableRows = detail.map((a,i) => `
       <tr>
-        <td>${i+1}</td><td>${a.nik}</td><td>${a.nama}</td><td>${a.tanggal}</td>
+        <td>${i+1}</td><td>${a.nik}</td><td>${a.nama||'-'}</td><td>${a.tanggal}</td>
         <td>${a.jam_masuk||'-'}</td><td>${a.jam_pulang||'-'}</td>
         <td style="color:${(a.status_masuk||'').includes('Terlambat')?'#e6a800':'#059669'}">${a.status_masuk||'-'}</td>
         <td style="color:${(a.status_pulang||'').includes('Cepat')?'#e6a800':'#059669'}">${a.status_pulang||'-'}</td>
-        <td>${a.shift||'-'}</td>
+        <td>${a.shift||a.shift_nama||'-'}</td>
       </tr>`).join('');
     const html = `<!DOCTYPE html><html><head><meta charset="UTF-8">
       <title>Rekap Absensi ${nama_bulan} ${tahun}</title>
