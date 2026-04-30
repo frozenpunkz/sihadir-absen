@@ -811,15 +811,274 @@ tbody tr:hover { background: #f8faff; }
   color: white;
 }
 
-/* ===== RESPONSIVE ===== */
+/* ===== RESPONSIVE — MOBILE FIRST ===== */
+
+/* ── Bottom Navigation (Mobile) ── */
+.bottom-nav {
+  display: none;
+  position: fixed;
+  bottom: 0; left: 0; right: 0;
+  background: white;
+  border-top: 1px solid var(--border);
+  z-index: 200;
+  padding: 0 4px;
+  padding-bottom: env(safe-area-inset-bottom, 0px); /* iPhone notch */
+  box-shadow: 0 -4px 20px rgba(15,76,138,0.08);
+}
+.bottom-nav-inner {
+  display: flex;
+  justify-content: space-around;
+  align-items: stretch;
+  height: 58px;
+}
+.bottom-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  flex: 1;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 600;
+  padding: 6px 4px;
+  border-radius: 10px;
+  transition: all 0.15s;
+  position: relative;
+  min-width: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+.bottom-nav-item i { font-size: 18px; }
+.bottom-nav-item span { font-size: 9px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.bottom-nav-item.active { color: var(--primary); }
+.bottom-nav-item.active i { transform: translateY(-1px); }
+.bottom-nav-item .bn-badge {
+  position: absolute;
+  top: 4px; right: calc(50% - 14px);
+  background: var(--danger);
+  color: white;
+  font-size: 8px;
+  font-weight: 700;
+  padding: 1px 4px;
+  border-radius: 6px;
+  min-width: 14px;
+  text-align: center;
+}
+
+/* Tombol "More" untuk menu tambahan di mobile */
+.bottom-nav-more {
+  position: fixed;
+  bottom: 70px; right: 16px;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-lg);
+  z-index: 300;
+  display: none;
+  min-width: 200px;
+  overflow: hidden;
+  animation: fadeInUp 0.2s ease;
+}
+.bottom-nav-more.show { display: block; }
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.bnm-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 18px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text);
+  cursor: pointer;
+  border-bottom: 1px solid var(--border);
+  -webkit-tap-highlight-color: transparent;
+}
+.bnm-item:last-child { border-bottom: none; }
+.bnm-item i { width: 18px; color: var(--primary); }
+.bnm-item.active { color: var(--primary); background: rgba(15,76,138,0.05); }
+
+/* ── Tablet (≤ 1024px) ── */
+@media (max-width: 1024px) {
+  .stats-grid { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* ── Mobile & Tablet sidebar collapse (≤ 900px) ── */
 @media (max-width: 900px) {
-  .sidebar { transform: translateX(-100%); }
-  .sidebar.open { transform: translateX(0); box-shadow: 0 0 60px rgba(0,0,0,0.3); }
+  /* Sidebar slide dari kiri */
+  .sidebar {
+    transform: translateX(-100%);
+    width: 280px;
+    z-index: 300;
+    transition: transform 0.28s cubic-bezier(0.4,0,0.2,1);
+  }
+  .sidebar.open {
+    transform: translateX(0);
+    box-shadow: 0 0 80px rgba(0,0,0,0.35);
+  }
+
+  /* Main content full width */
   .main-content { margin-left: 0; }
+
+  /* Hamburger tampil */
   .hamburger { display: flex; }
+
+  /* Form grid 1 kolom */
   .form-row, .form-row-3 { grid-template-columns: 1fr; }
-  .page-content { padding: 16px; }
-  .absen-time { font-size: 36px; }
+
+  /* Page padding lebih kecil */
+  .page-content { padding: 14px 14px 80px; } /* 80px untuk bottom nav */
+
+  /* Top bar */
+  .top-bar { padding: 0 16px; height: 56px; }
+  .top-bar-title { font-size: 16px; }
+
+  /* Jam absensi */
+  .absen-time { font-size: 38px; }
+  .absen-card { padding: 24px 20px; }
+  .absen-actions { flex-direction: column; }
+  .btn-absen { justify-content: center; }
+
+  /* Stat cards 2 kolom */
+  .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+  .stat-card { padding: 14px; gap: 12px; }
+  .stat-icon { width: 42px; height: 42px; font-size: 18px; }
+  .stat-value { font-size: 22px; }
+
+  /* Modal full screen di mobile */
+  .modal-overlay { padding: 0; align-items: flex-end; }
+  .modal {
+    border-radius: 20px 20px 0 0;
+    max-height: 92vh;
+    max-width: 100%;
+    width: 100%;
+    animation: modalSlideUp 0.3s cubic-bezier(0.4,0,0.2,1);
+  }
+  @keyframes modalSlideUp {
+    from { transform: translateY(100%); }
+    to   { transform: translateY(0); }
+  }
+  .modal-wide { max-width: 100%; }
+  .modal-header { padding: 20px 20px 14px; }
+  .modal-body { padding: 16px 20px; }
+  .modal-footer { padding: 12px 20px 20px; }
+
+  /* Modal footer tombol full width di mobile */
+  .modal-footer { flex-direction: column-reverse; }
+  .modal-footer .btn { width: 100%; justify-content: center; padding: 13px; }
+
+  /* Table scroll horizontal */
+  .table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  table { font-size: 12px; min-width: 500px; }
+  thead th { padding: 10px 10px; font-size: 10px; }
+  tbody td { padding: 10px 10px; }
+
+  /* Toast di bawah tengah */
+  #toastContainer {
+    bottom: 70px; /* di atas bottom nav */
+    left: 16px;
+    right: 16px;
+    align-items: center;
+  }
+  .toast { min-width: unset; max-width: 100%; width: 100%; }
+
+  /* Notif panel full width */
+  .notif-panel { left: 8px; right: 8px; width: auto; top: 60px; }
+
+  /* Page header stack vertikal */
+  .page-header { flex-direction: column; align-items: flex-start; gap: 10px; }
+  .page-header .btn { width: 100%; justify-content: center; }
+
+  /* Filter bar wrap */
+  .filter-bar > * { flex: 1 1 140px; }
+  .search-wrap { flex: 1 1 100%; order: -1; }
+
+  /* Tabs scroll horizontal */
+  .tabs { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+  .tab { white-space: nowrap; }
+
+  /* Bottom nav tampil */
+  .bottom-nav { display: flex; flex-direction: column; }
+
+  /* Hide sidebar nav & footer logout saat di mobile (pakai bottom nav) */
+  .sidebar-footer { display: none; }
+
+  /* Card body padding */
+  .card-body { padding: 16px; }
+  .card-header { padding: 14px 16px 12px; }
+}
+
+/* ── Small Mobile (≤ 480px) ── */
+@media (max-width: 480px) {
+  /* Login card */
+  .login-card { padding: 32px 20px; border-radius: 16px; }
+  .login-logo h1 { font-size: 24px; }
+
+  /* Stat cards 2 kolom tetap tapi lebih kecil */
+  .stats-grid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .stat-card { padding: 12px; gap: 10px; }
+  .stat-icon { width: 36px; height: 36px; font-size: 15px; border-radius: 8px; }
+  .stat-value { font-size: 20px; }
+  .stat-label { font-size: 11px; }
+
+  /* Absen */
+  .absen-time { font-size: 32px; letter-spacing: -1px; }
+  .absen-card { padding: 20px 16px; border-radius: 16px; }
+
+  /* Chart */
+  .chart-container { height: 200px; }
+
+  /* Page content */
+  .page-content { padding: 12px 12px 80px; }
+
+  /* Top bar */
+  .top-bar-title { font-size: 15px; }
+
+  /* Tombol absen full width */
+  .btn-absen { padding: 13px 18px; font-size: 14px; }
+
+  /* Filter bar full width */
+  .filter-bar { flex-direction: column; }
+  .filter-bar > * { width: 100%; min-width: unset; }
+
+  /* Badge di tabel */
+  .badge { font-size: 10px; padding: 2px 7px; }
+}
+
+/* ── Landscape Mobile (tinggi < 500px) ── */
+@media (max-height: 500px) and (orientation: landscape) {
+  .absen-card { padding: 16px 20px; }
+  .absen-time { font-size: 28px; }
+  .absen-date { margin-bottom: 12px; font-size: 13px; }
+  .absen-actions { flex-direction: row; }
+  .modal { max-height: 96vh; }
+  .page-content { padding-bottom: 70px; }
+}
+
+/* ── Touch improvements ── */
+@media (hover: none) {
+  /* Disable hover transform di touch device */
+  .stat-card:hover { transform: none; }
+  .btn-primary:hover { transform: none; }
+  .nav-item:hover { background: transparent; }
+
+  /* Tap target minimal 44px */
+  .btn { min-height: 44px; }
+  .btn-sm { min-height: 36px; }
+  .nav-item { min-height: 48px; }
+  .bottom-nav-item { min-height: 48px; }
+  .form-control { min-height: 44px; font-size: 16px; } /* 16px hindari zoom iOS */
+  select.form-control { font-size: 16px; } /* hindari zoom iOS */
+}
+
+/* ── Desktop (> 900px) — pastikan bottom nav tersembunyi ── */
+@media (min-width: 901px) {
+  .bottom-nav { display: none !important; }
+  .bottom-nav-more { display: none !important; }
+  .page-content { padding-bottom: 28px; }
 }
 
 /* ===== TAB ===== */
@@ -881,8 +1140,9 @@ tbody tr:hover { background: #f8faff; }
   display: none;
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.4);
-  z-index: 99;
+  background: rgba(0,0,0,0.45);
+  z-index: 299;
+  backdrop-filter: blur(2px);
 }
 </style>
 </head>
@@ -937,6 +1197,15 @@ tbody tr:hover { background: #f8faff; }
 <!-- MAIN APP -->
 <div id="mainApp">
   <div id="sidebarOverlay" onclick="closeSidebar()"></div>
+
+  <!-- BOTTOM NAVIGATION (Mobile Only) -->
+  <div class="bottom-nav" id="bottomNav">
+    <div class="bottom-nav-inner" id="bottomNavInner">
+      <!-- Diisi buildBottomNav() -->
+    </div>
+  </div>
+  <!-- MORE MENU popup -->
+  <div class="bottom-nav-more" id="bottomNavMore"></div>
   <div class="app-layout">
     <!-- SIDEBAR -->
     <aside class="sidebar" id="sidebar">
@@ -2028,9 +2297,60 @@ function buildNav(role) {
         </div>`;
     }
   });
-  // Set active
   const firstNav = nav.querySelector('.nav-item');
   if (firstNav) firstNav.classList.add('active');
+
+  // Build bottom nav for mobile
+  buildBottomNav(role, items);
+}
+
+// ── BOTTOM NAV MOBILE ───────────────────────────────────────
+function buildBottomNav(role, items) {
+  const navItems = items.filter(i => i.type !== 'section');
+  // Tampilkan max 4 item di bottom nav, sisanya di "More"
+  const MAX_SHOW  = 4;
+  const mainItems = navItems.slice(0, MAX_SHOW);
+  const moreItems = navItems.slice(MAX_SHOW);
+
+  const inner = document.getElementById('bottomNavInner');
+  inner.innerHTML = mainItems.map(item => `
+    <div class="bottom-nav-item" data-page="${item.id}" onclick="navigateTo('${item.id}',null)">
+      <i class="fas ${item.icon}"></i>
+      <span>${item.label}</span>
+    </div>`).join('');
+
+  // Tambah tombol "More" jika ada menu tambahan
+  if (moreItems.length > 0) {
+    inner.innerHTML += `
+      <div class="bottom-nav-item" id="btnBottomMore" onclick="toggleBottomMore()">
+        <i class="fas fa-ellipsis-h"></i>
+        <span>Lainnya</span>
+      </div>`;
+    const moreEl = document.getElementById('bottomNavMore');
+    moreEl.innerHTML = moreItems.map(item => `
+      <div class="bnm-item" data-page="${item.id}" onclick="navigateTo('${item.id}',null);closeBottomMore()">
+        <i class="fas ${item.icon}"></i>
+        ${item.label}
+      </div>`).join('');
+  }
+}
+
+function toggleBottomMore() {
+  const el = document.getElementById('bottomNavMore');
+  el.classList.toggle('show');
+}
+function closeBottomMore() {
+  document.getElementById('bottomNavMore')?.classList.remove('show');
+}
+
+// Sinkronisasi active state bottom nav
+function syncBottomNav(pageId) {
+  document.querySelectorAll('.bottom-nav-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.page === pageId);
+  });
+  document.querySelectorAll('.bnm-item').forEach(el => {
+    el.classList.toggle('active', el.dataset.page === pageId);
+  });
 }
 
 function navigateTo(pageId, el) {
@@ -2072,6 +2392,8 @@ function navigateTo(pageId, el) {
   currentPage = pageId;
   document.getElementById('topBarTitle').textContent = titleMap[pageId] || '';
   closeSidebar();
+  closeBottomMore();
+  syncBottomNav(pageId);
 
   // Load data
   switch (pageId) {
@@ -3678,6 +4000,15 @@ document.addEventListener('click', e => {
 // SETUP & INIT
 // ============================================================
 window.onload = function() {
+  // Tutup bottom more menu saat klik di luar
+  document.addEventListener('click', function(e) {
+    const more = document.getElementById('bottomNavMore');
+    const btn  = document.getElementById('btnBottomMore');
+    if (more?.classList.contains('show') && !more.contains(e.target) && !btn?.contains(e.target)) {
+      more.classList.remove('show');
+    }
+  });
+
   // Cek sesi tersimpan
   const savedUser = loadSession();
   if (savedUser) {
