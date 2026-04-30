@@ -849,8 +849,8 @@ tbody tr:hover { background: #f8faff; }
   min-width: 0;
   -webkit-tap-highlight-color: transparent;
 }
-.bottom-nav-item i { font-size: 18px; }
-.bottom-nav-item span { font-size: 9px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.bottom-nav-item i { font-size: 22px; }
+.bottom-nav-item span { font-size: 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
 .bottom-nav-item.active { color: var(--primary); }
 .bottom-nav-item.active i { transform: translateY(-1px); }
 .bottom-nav-item .bn-badge {
@@ -1144,6 +1144,40 @@ tbody tr:hover { background: #f8faff; }
   z-index: 299;
   backdrop-filter: blur(2px);
 }
+
+/* ===== JADWAL MINGGU GRID ===== */
+.jadwal-minggu-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 10px;
+}
+@media (max-width: 900px) {
+  .jadwal-minggu-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+  }
+}
+@media (max-width: 480px) {
+  .jadwal-minggu-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+}
+
+/* ===== RESPONSIVE GRID UTILITIES ===== */
+.grid-2   { display:grid; grid-template-columns:1fr 1fr;    gap:20px; }
+.grid-3   { display:grid; grid-template-columns:1fr 1fr 1fr; gap:20px; }
+.grid-1-2 { display:grid; grid-template-columns:1fr 2fr;    gap:20px; }
+.grid-mb  { margin-bottom:20px; }
+
+@media (max-width:900px) {
+  .grid-2, .grid-3, .grid-1-2 { grid-template-columns:1fr !important; gap:14px; }
+  .page-header-actions { display:flex; flex-wrap:wrap; gap:8px; width:100%; }
+  .page-header-actions .btn { flex:1 1 auto; justify-content:center; min-width:100px; }
+  .filter-row { display:flex; flex-wrap:wrap; gap:8px; }
+  .filter-row select { flex:1 1 110px; min-width:0; }
+  .filter-row .btn { flex:0 0 auto; }
+}
 </style>
 </head>
 <body>
@@ -1281,7 +1315,7 @@ tbody tr:hover { background: #f8faff; }
             <div id="dashBulanTahun" style="font-size:13px;color:var(--text-muted);font-weight:600"></div>
           </div>
           <div class="stats-grid" id="statsGrid"></div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px" class="dash-grid">
+          <div class="grid-2 grid-mb" id="dashMainGrid">
             <div class="card">
               <div class="card-header"><h3><i class="fas fa-chart-bar" style="color:var(--primary);margin-right:8px"></i>Tren Kehadiran Bulanan</h3></div>
               <div class="card-body">
@@ -1318,9 +1352,7 @@ tbody tr:hover { background: #f8faff; }
               </button>
             </div>
           </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
-            <div class="card">
-              <div class="card-header"><h3>Status Hari Ini</h3></div>
+          <div class="grid-2" style="margin-top:0">
               <div class="card-body" id="statusAbsenHariIni">
                 <div class="empty-state" style="padding:20px"><i class="fas fa-spinner fa-spin"></i></div>
               </div>
@@ -1412,7 +1444,7 @@ tbody tr:hover { background: #f8faff; }
               <i class="fas fa-plus"></i> Input Laporan
             </button>
           </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+          <div class="grid-2">
             <div class="card">
               <div class="card-header">
                 <h3>Riwayat Laporan</h3>
@@ -1476,7 +1508,7 @@ tbody tr:hover { background: #f8faff; }
           <div class="page-header">
             <div><h2>Lokasi & Shift</h2><p>Konfigurasi lokasi absensi dan jadwal shift</p></div>
           </div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+          <div class="grid-2">
             <div class="card">
               <div class="card-header">
                 <h3><i class="fas fa-map-marker-alt" style="color:var(--danger);margin-right:6px"></i>Lokasi Absensi</h3>
@@ -1575,7 +1607,7 @@ tbody tr:hover { background: #f8faff; }
           <div class="page-header">
             <div><h2>Profil Saya</h2><p>Informasi akun dan pengaturan</p></div>
           </div>
-          <div style="display:grid;grid-template-columns:1fr 2fr;gap:20px">
+          <div class="grid-1-2">
             <div class="card">
               <div class="card-body" style="text-align:center">
                 <div style="position:relative;display:inline-block;margin-bottom:16px">
@@ -1663,7 +1695,7 @@ tbody tr:hover { background: #f8faff; }
           </div>
           <!-- TAB: ATUR JADWAL -->
           <div id="tabAturJadwal" style="display:none">
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+            <div class="grid-2">
               <div class="card">
                 <div class="card-header"><h3><i class="fas fa-plus-circle" style="color:var(--primary);margin-right:6px"></i>Input Jadwal Harian</h3></div>
                 <div class="card-body">
@@ -2123,7 +2155,7 @@ let allNotif = [];
 // Ganti dengan URL Worker kamu
 // Format: https://sihadir-proxy.USERNAME.workers.dev
 // ============================================================
-const WORKER_URL = 'https://sihadir-proxy.techrover.workers.dev'; // ← GANTI
+const WORKER_URL = 'https://sihadir-proxy.USERNAME.workers.dev'; // ← GANTI
 
 // ============================================================
 // UTILITY — callServer via Cloudflare Worker (fetch)
@@ -2238,46 +2270,46 @@ function startClock() {
 // ============================================================
 const NAV_CONFIG = {
   Pegawai: [
-    { id: 'dashboard', icon: 'fa-home', label: 'Dashboard' },
-    { id: 'absensi', icon: 'fa-fingerprint', label: 'Absensi' },
+    { id: 'dashboard',   icon: 'fa-home',          label: 'Dashboard' },
+    { id: 'absensi',     icon: 'fa-fingerprint',   label: 'Absensi' },
+    { id: 'laporan',     icon: 'fa-file-alt',      label: 'Laporan Kerja' },
     { id: 'jadwalShift', icon: 'fa-calendar-week', label: 'Jadwal Shift' },
-    { id: 'cuti', icon: 'fa-calendar-times', label: 'Cuti & Izin' },
-    { id: 'laporan', icon: 'fa-file-alt', label: 'Laporan Kerja' },
-    { id: 'profil', icon: 'fa-user', label: 'Profil' },
+    { id: 'cuti',        icon: 'fa-calendar-times', label: 'Cuti & Izin' },
+    { id: 'profil',      icon: 'fa-user',           label: 'Profil' },
   ],
   Manajer: [
-    { id: 'dashboard', icon: 'fa-home', label: 'Dashboard' },
-    { id: 'absensi', icon: 'fa-fingerprint', label: 'Absensi' },
+    { id: 'dashboard',   icon: 'fa-home',          label: 'Dashboard' },
+    { id: 'absensi',     icon: 'fa-fingerprint',   label: 'Absensi' },
+    { id: 'laporan',     icon: 'fa-file-alt',      label: 'Laporan Kerja' },
     { id: 'jadwalShift', icon: 'fa-calendar-week', label: 'Jadwal Shift' },
-    { id: 'cuti', icon: 'fa-calendar-times', label: 'Cuti & Izin' },
-    { id: 'laporan', icon: 'fa-file-alt', label: 'Laporan Kerja' },
-    { id: 'rekap', icon: 'fa-table', label: 'Rekap Absensi' },
-    { id: 'profil', icon: 'fa-user', label: 'Profil' },
+    { id: 'cuti',        icon: 'fa-calendar-times', label: 'Cuti & Izin' },
+    { id: 'rekap',       icon: 'fa-table',          label: 'Rekap Absensi' },
+    { id: 'profil',      icon: 'fa-user',           label: 'Profil' },
   ],
   HRD: [
-    { id: 'dashboard', icon: 'fa-home', label: 'Dashboard' },
-    { id: 'absensi', icon: 'fa-fingerprint', label: 'Absensi' },
-    { id: 'jadwalShift', icon: 'fa-calendar-week', label: 'Jadwal Shift' },
-    { id: 'cuti', icon: 'fa-calendar-times', label: 'Cuti & Izin' },
-    { id: 'laporan', icon: 'fa-file-alt', label: 'Laporan Kerja' },
-    { id: 'rekap', icon: 'fa-table', label: 'Rekap Absensi' },
-    { id: 'laporanAdmin', icon: 'fa-chart-line', label: 'Laporan Kinerja' },
-    { id: 'profil', icon: 'fa-user', label: 'Profil' },
+    { id: 'dashboard',    icon: 'fa-home',          label: 'Dashboard' },
+    { id: 'absensi',      icon: 'fa-fingerprint',   label: 'Absensi' },
+    { id: 'laporan',      icon: 'fa-file-alt',      label: 'Laporan Kerja' },
+    { id: 'jadwalShift',  icon: 'fa-calendar-week', label: 'Jadwal Shift' },
+    { id: 'cuti',         icon: 'fa-calendar-times', label: 'Cuti & Izin' },
+    { id: 'rekap',        icon: 'fa-table',          label: 'Rekap Absensi' },
+    { id: 'laporanAdmin', icon: 'fa-chart-line',     label: 'Laporan Kinerja' },
+    { id: 'profil',       icon: 'fa-user',           label: 'Profil' },
   ],
   Admin: [
-    { id: 'dashboard', icon: 'fa-home', label: 'Dashboard' },
-    { id: 'absensi', icon: 'fa-fingerprint', label: 'Absensi' },
-    { id: 'cuti', icon: 'fa-calendar-times', label: 'Cuti & Izin' },
-    { id: 'laporan', icon: 'fa-file-alt', label: 'Laporan Kerja' },
+    { id: 'dashboard',    icon: 'fa-home',           label: 'Dashboard' },
+    { id: 'absensi',      icon: 'fa-fingerprint',    label: 'Absensi' },
+    { id: 'laporan',      icon: 'fa-file-alt',       label: 'Laporan Kerja' },
+    { id: 'cuti',         icon: 'fa-calendar-times', label: 'Cuti & Izin' },
     { type: 'section', label: 'Administrasi' },
-    { id: 'pegawai', icon: 'fa-users', label: 'Data Pegawai' },
-    { id: 'lokasiShift', icon: 'fa-map-marker-alt', label: 'Lokasi & Shift' },
-    { id: 'jadwalShift', icon: 'fa-calendar-week', label: 'Jadwal Shift' },
-    { id: 'rekap', icon: 'fa-table', label: 'Rekap Absensi' },
-    { id: 'laporanAdmin', icon: 'fa-chart-line', label: 'Laporan Kinerja' },
-    { id: 'log', icon: 'fa-history', label: 'Log Aktivitas' },
+    { id: 'pegawai',      icon: 'fa-users',          label: 'Data Pegawai' },
+    { id: 'lokasiShift',  icon: 'fa-map-marker-alt', label: 'Lokasi & Shift' },
+    { id: 'jadwalShift',  icon: 'fa-calendar-week',  label: 'Jadwal Shift' },
+    { id: 'rekap',        icon: 'fa-table',           label: 'Rekap Absensi' },
+    { id: 'laporanAdmin', icon: 'fa-chart-line',      label: 'Laporan Kinerja' },
+    { id: 'log',          icon: 'fa-history',         label: 'Log Aktivitas' },
     { type: 'section', label: 'Akun' },
-    { id: 'profil', icon: 'fa-user', label: 'Profil' },
+    { id: 'profil',       icon: 'fa-user',            label: 'Profil' },
   ],
 };
 
@@ -4141,7 +4173,7 @@ async function loadJadwalMingguIni(nikOverride) {
           <span style="color:var(--border)">●</span> Default
         </div>
       </div>
-      <div style="display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:10px">
+      <div class="jadwal-minggu-grid">
         ${res.data.map(d => {
           const nm = d.nama_shift || '';
           const tipe = nm === 'Non-Shift' ? 'Non-Shift' : nm === 'Fleksibel' ? 'Fleksibel'
