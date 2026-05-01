@@ -393,11 +393,13 @@ img, video, canvas, svg { max-width: 100%; }
   align-items: center;
   justify-content: space-between;
   margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--border);
   flex-wrap: wrap;
   gap: 12px;
 }
 .page-header h2 { font-size: 22px; font-weight: 800; letter-spacing: -0.3px; }
-.page-header p { color: var(--text-muted); font-size: 14px; margin-top: 2px; }
+.page-header p  { color: var(--text-muted); font-size: 14px; margin-top: 2px; }
 
 /* ===== CARDS ===== */
 .card {
@@ -1351,6 +1353,8 @@ tbody tr:hover { background: #f8faff; }
           <div class="page-header">
             <div><h2>Absensi</h2><p>Lakukan check-in dan check-out harian Anda</p></div>
           </div>
+
+          <!-- Jam + Tombol Absen -->
           <div class="absen-card">
             <div class="absen-time" id="absenClock">00:00:00</div>
             <div class="absen-date" id="absenDate">-</div>
@@ -1363,22 +1367,20 @@ tbody tr:hover { background: #f8faff; }
               </button>
             </div>
           </div>
-          <div class="grid-2" style="margin-top:0">
-              <div class="card-body" id="statusAbsenHariIni">
-                <div class="empty-state" style="padding:20px"><i class="fas fa-spinner fa-spin"></i></div>
-              </div>
-            </div>
-            <div class="card">
-              <div class="card-header"><h3>Info Shift/Waktu Kerja</h3></div>
-              <div class="card-body" id="infoShift">
-                <div class="empty-state" style="padding:20px"><i class="fas fa-spinner fa-spin"></i></div>
-              </div>
+
+          <!-- Status Hari Ini -->
+          <div class="card" style="margin-top:16px">
+            <div class="card-header"><h3>Status Kehadiran Hari Ini</h3></div>
+            <div class="card-body" id="statusAbsenHariIni">
+              <div class="empty-state" style="padding:20px"><i class="fas fa-spinner fa-spin"></i></div>
             </div>
           </div>
-          <div class="card" style="margin-top:20px">
+
+          <!-- Riwayat Absensi -->
+          <div class="card" style="margin-top:16px">
             <div class="card-header">
               <h3>Riwayat Absensi</h3>
-              <div style="display:flex;gap:8px">
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
                 <select class="form-control" style="width:auto;padding:7px 10px;font-size:12px" id="absenBulanFilter" onchange="loadAbsensiList()"></select>
                 <select class="form-control" style="width:auto;padding:7px 10px;font-size:12px" id="absenTahunFilter" onchange="loadAbsensiList()"></select>
               </div>
@@ -1455,24 +1457,26 @@ tbody tr:hover { background: #f8faff; }
               <i class="fas fa-plus"></i> Input Laporan
             </button>
           </div>
-          <div class="grid-2">
-            <div class="card">
-              <div class="card-header">
-                <h3>Riwayat Laporan</h3>
-                <div style="display:flex;gap:8px">
-                  <select class="form-control" style="width:auto;padding:7px 10px;font-size:12px" id="lapBulanFilter" onchange="loadLaporanKerja()"></select>
-                  <select class="form-control" style="width:auto;padding:7px 10px;font-size:12px" id="lapTahunFilter" onchange="loadLaporanKerja()"></select>
-                </div>
-              </div>
-              <div class="card-body" id="laporanList">
-                <div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Memuat...</p></div>
+
+          <!-- Rekap Bulanan — di atas agar tidak tertutup navbar -->
+          <div class="card" style="margin-bottom:16px">
+            <div class="card-header"><h3>Rekap Bulanan</h3></div>
+            <div class="card-body" id="laporanRekap">
+              <div class="empty-state" style="padding:20px"><i class="fas fa-chart-pie" style="opacity:0.2"></i><p>Pilih bulan dan tahun</p></div>
+            </div>
+          </div>
+
+          <!-- Riwayat Laporan -->
+          <div class="card">
+            <div class="card-header">
+              <h3>Riwayat Laporan</h3>
+              <div style="display:flex;gap:8px;flex-wrap:wrap">
+                <select class="form-control" style="width:auto;padding:7px 10px;font-size:12px" id="lapBulanFilter" onchange="loadLaporanKerja()"></select>
+                <select class="form-control" style="width:auto;padding:7px 10px;font-size:12px" id="lapTahunFilter" onchange="loadLaporanKerja()"></select>
               </div>
             </div>
-            <div class="card">
-              <div class="card-header"><h3>Rekap Bulanan</h3></div>
-              <div class="card-body" id="laporanRekap">
-                <div class="empty-state" style="padding:20px"><i class="fas fa-chart-pie" style="opacity:0.2"></i><p>Pilih bulan dan tahun</p></div>
-              </div>
+            <div class="card-body" id="laporanList">
+              <div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Memuat...</p></div>
             </div>
           </div>
         </div>
@@ -2178,11 +2182,13 @@ async function callServer(action, payload = {}) {
     headers: { 'Content-Type': 'application/json' },
     body:    JSON.stringify({ action, payload }),
   });
+  // BUG #6 FIX: selalu parse JSON dulu, baru throw jika tidak sukses HTTP
+  const data = await res.json().catch(() => ({ success: false, message: 'Response bukan JSON.' }));
   if (!res.ok) {
-    const errText = await res.text().catch(() => '');
-    throw new Error(`HTTP ${res.status}: ${errText.substring(0, 200)}`);
+    // Gunakan pesan dari JSON jika ada, bukan raw HTTP error
+    throw new Error(data.message || `Terjadi kesalahan server (${res.status}).`);
   }
-  return res.json();
+  return data;
 }
 
 function showLoading(text = 'Memproses...') {
@@ -2226,23 +2232,27 @@ function populateBulanTahun(selectBulanId, selectTahunId, bulanDef, tahunDef) {
   const tahunEl = document.getElementById(selectTahunId);
   if (!bulanEl || !tahunEl) return;
 
-  bulanEl.innerHTML = '';
-  for (let i = 1; i <= 12; i++) {
-    const opt = document.createElement('option');
-    opt.value = i;
-    opt.textContent = getNamaBulan(i);
-    if (i === (bulanDef || new Date().getMonth() + 1)) opt.selected = true;
-    bulanEl.appendChild(opt);
+  // BUG #4 FIX: hanya populate jika dropdown masih kosong
+  // agar pilihan user tidak di-reset setiap kali fungsi dipanggil
+  if (bulanEl.options.length === 0) {
+    for (let i = 1; i <= 12; i++) {
+      const opt = document.createElement('option');
+      opt.value = i;
+      opt.textContent = getNamaBulan(i);
+      if (i === (bulanDef || new Date().getMonth() + 1)) opt.selected = true;
+      bulanEl.appendChild(opt);
+    }
   }
 
-  tahunEl.innerHTML = '';
-  const thn = new Date().getFullYear();
-  for (let y = thn - 2; y <= thn + 1; y++) {
-    const opt = document.createElement('option');
-    opt.value = y;
-    opt.textContent = y;
-    if (y === (tahunDef || thn)) opt.selected = true;
-    tahunEl.appendChild(opt);
+  if (tahunEl.options.length === 0) {
+    const thn = new Date().getFullYear();
+    for (let y = thn - 2; y <= thn + 1; y++) {
+      const opt = document.createElement('option');
+      opt.value = y;
+      opt.textContent = y;
+      if (y === (tahunDef || thn)) opt.selected = true;
+      tahunEl.appendChild(opt);
+    }
   }
 }
 
@@ -2965,14 +2975,14 @@ function tutupModalAbsen() {
 async function submitAbsen() {
   showLoading('Memproses absensi...');
   try {
-    const action = currentAbsenType === 'masuk' ? 'absenMasuk' : 'absenPulang';
+    const action  = currentAbsenType === 'masuk' ? 'absenMasuk' : 'absenPulang';
     const payload = {
-      nik: currentUser.nik,
-      lat: currentGPS ? currentGPS.lat : null,
-      lng: currentGPS ? currentGPS.lng : null,
-      foto: capturedPhotoData,
-      ket: document.getElementById('absenKet').value,
-      user_info: { nik: currentUser.nik, username: currentUser.username }
+      nik:      currentUser.nik,
+      lat:      currentGPS ? currentGPS.lat : null,
+      lng:      currentGPS ? currentGPS.lng : null,
+      foto:     capturedPhotoData,
+      ket:      document.getElementById('absenKet').value,
+      user_info:{ nik: currentUser.nik, username: currentUser.username }
     };
     const res = await callServer(action, payload);
     if (res.success) {
@@ -2981,10 +2991,24 @@ async function submitAbsen() {
       loadStatusAbsen();
       loadAbsensiList();
     } else {
-      showToast(res.message, 'error');
+      // BUG #6 FIX: tampilkan hanya pesan yang relevan, bukan raw JSON
+      showToast(res.message || 'Absensi gagal. Silakan coba lagi.', 'error');
     }
   } catch (e) {
-    showToast('Error: ' + e, 'error');
+    // BUG #6 FIX: parse pesan error yang bersih dari response HTTP
+    let pesanError = 'Gagal terhubung ke server. Periksa koneksi internet Anda.';
+    try {
+      const errText = e.message || '';
+      // Coba ekstrak pesan dari JSON jika ada
+      const jsonMatch = errText.match(/\{.*\}/s);
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0]);
+        if (parsed.message) pesanError = parsed.message;
+      } else if (errText && !errText.includes('HTTP')) {
+        pesanError = errText;
+      }
+    } catch (_) {}
+    showToast(pesanError, 'error');
   } finally {
     hideLoading();
   }
