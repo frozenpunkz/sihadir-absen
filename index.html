@@ -319,6 +319,9 @@ body {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
+  overflow-x: hidden; /* BUG #2 FIX: cegah konten meluber ke kanan */
+  min-width: 0;       /* BUG #2 FIX: flex child tidak overflow */
+  max-width: 100%;
 }
 
 .top-bar {
@@ -374,7 +377,12 @@ body {
   font-size: 16px;
 }
 
-.page-content { padding: 28px; flex: 1; }
+.page-content { padding: 28px; flex: 1; max-width: 100%; box-sizing: border-box; overflow-x: hidden; }
+
+/* BUG #2 FIX: Cegah semua elemen meluber dari container */
+*, *::before, *::after { box-sizing: border-box; }
+img, video, canvas, svg { max-width: 100%; }
+.page { max-width: 100%; overflow-x: hidden; }
 
 /* ===== PAGES ===== */
 .page { display: none; }
@@ -924,6 +932,7 @@ tbody tr:hover { background: #f8faff; }
   .main-content { margin-left: 0; }
 
   /* Hamburger tampil */
+  /* Hamburger hanya tampil di tablet - mobile punya bottom nav */
   .hamburger { display: flex; }
 
   /* Form grid 1 kolom */
@@ -1046,6 +1055,8 @@ tbody tr:hover { background: #f8faff; }
 
   /* Badge di tabel */
   .badge { font-size: 10px; padding: 2px 7px; }
+  /* BUG #3 FIX: Sembunyikan hamburger di mobile kecil karena sudah ada bottom nav */
+  .hamburger { display: none !important; }
 }
 
 /* ── Landscape Mobile (tinggi < 500px) ── */
@@ -2351,7 +2362,7 @@ function buildBottomNav(role, items) {
       <span>${item.label}</span>
     </div>`).join('');
 
-  // Tambah tombol "More" jika ada menu tambahan
+  // Tambah tombol Logout dan Profil di more menu
   if (moreItems.length > 0) {
     inner.innerHTML += `
       <div class="bottom-nav-item" id="btnBottomMore" onclick="toggleBottomMore()">
@@ -2363,7 +2374,19 @@ function buildBottomNav(role, items) {
       <div class="bnm-item" data-page="${item.id}" onclick="navigateTo('${item.id}',null);closeBottomMore()">
         <i class="fas ${item.icon}"></i>
         ${item.label}
-      </div>`).join('');
+      </div>`).join('') +
+      // BUG #4 FIX: selalu tambah tombol Logout di paling bawah more menu
+      `<div class="bnm-item" onclick="closeBottomMore();doLogout()" style="color:var(--danger)">
+        <i class="fas fa-sign-out-alt" style="color:var(--danger)"></i>
+        Logout
+      </div>`;
+  } else {
+    // Jika tidak ada more item, tetap tambah logout sebagai item bottom nav terakhir
+    inner.innerHTML += `
+      <div class="bottom-nav-item" onclick="doLogout()" style="color:var(--danger)">
+        <i class="fas fa-sign-out-alt"></i>
+        <span>Logout</span>
+      </div>`;
   }
 }
 
@@ -2559,19 +2582,24 @@ function initApp() {
   buildNav(currentUser.role);
   startClock();
 
-  // FIX: pastikan halaman dashboard aktif saat pertama kali
+  // Pastikan halaman dashboard aktif saat pertama kali
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   const dashPage = document.getElementById('pageDashboard');
   if (dashPage) dashPage.classList.add('active');
   document.getElementById('topBarTitle').textContent = 'Dashboard';
+  syncBottomNav('dashboard');
+
+  // BUG #1 FIX: populate filter absensi saat initApp agar riwayat absensi
+  // di dashboard langsung terisi tanpa harus klik menu Absensi dulu
+  populateBulanTahun('absenBulanFilter', 'absenTahunFilter');
 
   loadDashboard();
   loadNotifikasi();
   setInterval(loadNotifikasi, 60000);
 
-  // FIX PEGAWAI: panggil loadStatusAbsen saat login agar tombol absen
-  // langsung aktif/nonaktif sesuai kondisi hari ini, tanpa harus klik menu Absensi dulu
+  // Load status absen & riwayat langsung saat login
   loadStatusAbsen();
+  loadAbsensiList();
 }
 
 // ============================================================
@@ -4091,8 +4119,13 @@ async function loadShiftCache() {
 async function loadPegawaiCache() {
   try {
     const res = await callServer('getPegawaiList', {});
-    pegawaiListCache = res.success ? res.data.filter(p => p.status === 'Aktif' && p.tipe_waktu === 'Shift') : [];
-  } catch (e) {}
+    // BUG #5 FIX: tampilkan SEMUA pegawai aktif, bukan hanya tipe Shift
+    // Admin bisa assign jadwal ke pegawai tipe apapun
+    pegawaiListCache = res.success ? res.data.filter(p => p.status === 'Aktif') : [];
+  } catch (e) {
+    console.error('[loadPegawaiCache]', e);
+    pegawaiListCache = [];
+  }
 }
 
 function populateJadwalSelects() {
