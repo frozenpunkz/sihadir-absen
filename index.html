@@ -964,12 +964,13 @@ tbody tr:hover { background: #f8faff; }
   .stat-value { font-size: 22px; }
 
   /* Modal full screen di mobile */
-  .modal-overlay {
-    display: flex !important;
-    align-items: flex-end !important;
+  .modal-overlay { 
+    padding: 0; 
+    align-items: flex-end !important; 
     justify-content: center;
     background: rgba(0, 0, 0, 0.6);
     backdrop-filter: blur(4px);
+    display: none;
   }
   .modal {
     border-radius: 24px 24px 0 0 !important;
@@ -979,6 +980,7 @@ tbody tr:hover { background: #f8faff; }
     overflow: hidden;
     margin-bottom: 0 !important;
     border: none !important;
+    animation: modalSlideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   }
   .modal::before {
     content: "";
