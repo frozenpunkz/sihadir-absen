@@ -1271,10 +1271,6 @@ tbody tr:hover { background: #f8faff; }
           <input type="password" id="loginPassword" placeholder="Masukkan password" autocomplete="current-password">
         </div>
       </div>
-      <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px">
-        <input type="checkbox" id="ingatSaya" style="width:16px;height:16px;cursor:pointer;accent-color:var(--accent)">
-        <label for="ingatSaya" style="color:rgba(255,255,255,0.7);font-size:13px;cursor:pointer;text-transform:none;letter-spacing:0;font-weight:500">Ingat saya selama 30 menit</label>
-      </div>
       <button class="btn-login" onclick="doLogin()">
         <i class="fas fa-sign-in-alt"></i> Masuk
       </button>
@@ -2567,28 +2563,35 @@ function navigateTo(pageId, el) {
 // SESSION MANAGEMENT (30 menit)
 // ============================================================
 const SESSION_KEY = 'sihadir_session';
-const SESSION_DURATION = 30 * 60 * 1000; // 30 menit
-let sessionTimer = null;
-
-// BUG #7 FIX: Selalu simpan session setelah login agar tidak logout saat refresh
-// Durasi 30 menit sejak last activity (diperpanjang otomatis saat ada interaksi)
-function saveSession(user, ingat = true) {
-  const session = { user, expiry: Date.now() + SESSION_DURATION };
-  try { sessionStorage.setItem(SESSION_KEY, JSON.stringify(session)); } catch(e) {}
+  
+function saveSession(user) {
+  const session = { 
+    user, 
+    loginAt: new Date().toISOString() 
+  };
+  try { 
+    localStorage.setItem(SESSION_KEY, JSON.stringify(session)); 
+  } catch(e) {
+    console.error("Gagal menyimpan sesi:", e);
+  }
 }
 
 function loadSession() {
   try {
-    const raw = sessionStorage.getItem(SESSION_KEY);
+    const raw = localStorage.getItem(SESSION_KEY);
     if (!raw) return null;
     const session = JSON.parse(raw);
-    if (Date.now() > session.expiry) { sessionStorage.removeItem(SESSION_KEY); return null; }
     return session.user;
-  } catch(e) { return null; }
+  } catch(e) { 
+    return null; 
+  }
 }
 
 function clearSession() {
-  try { sessionStorage.removeItem(SESSION_KEY); } catch(e) {}
+  try { 
+    localStorage.removeItem(SESSION_KEY); 
+    localStorage.clear();
+  } catch(e) {}
 }
 
 function startSessionTimer() {
@@ -2614,7 +2617,6 @@ document.addEventListener('keypress', extendSession);
 async function doLogin() {
   const username = document.getElementById('loginUsername').value.trim();
   const password = document.getElementById('loginPassword').value;
-  const ingatSaya = document.getElementById('ingatSaya')?.checked || false;
   const errEl = document.getElementById('loginError');
   errEl.style.display = 'none';
 
@@ -2629,17 +2631,18 @@ async function doLogin() {
     const result = await callServer('login', { username, password });
     if (result.success) {
       currentUser = result.data;
-      saveSession(currentUser, true); // BUG #7 FIX: selalu simpan session agar tidak logout saat refresh
+      saveSession(currentUser); 
+      
       document.getElementById('loginPage').style.display = 'none';
       document.getElementById('mainApp').style.display = 'block';
-      initApp();
-      startSessionTimer(); // BUG #7 FIX: selalu jalankan timer
+  
+      initApp(); 
     } else {
       errEl.textContent = result.message;
       errEl.style.display = 'block';
     }
   } catch (e) {
-    errEl.textContent = 'Gagal terhubung ke server. Pastikan script sudah di-deploy.';
+    errEl.textContent = 'Gagal terhubung ke server. Periksa koneksi internet Anda.';
     errEl.style.display = 'block';
   } finally {
     hideLoading();
@@ -2652,13 +2655,16 @@ document.addEventListener('keypress', e => {
 
 function doLogout() {
   clearSession();
-  if (sessionTimer) { clearInterval(sessionTimer); sessionTimer = null; }
   currentUser = null;
+  if (cameraStream) { 
+    cameraStream.getTracks().forEach(t => t.stop()); 
+    cameraStream = null; 
+  }
   document.getElementById('mainApp').style.display = 'none';
   document.getElementById('loginPage').style.display = 'flex';
   document.getElementById('loginUsername').value = '';
   document.getElementById('loginPassword').value = '';
-  if (cameraStream) { cameraStream.getTracks().forEach(t => t.stop()); cameraStream = null; }
+  location.reload();
 }
 
 function initApp() {
