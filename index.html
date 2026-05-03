@@ -939,6 +939,10 @@ tbody tr:hover { background: #f8faff; }
 
   /* Form grid 1 kolom */
   .form-row, .form-row-3 { grid-template-columns: 1fr; }
+  .form-row {
+    gap: 12px !important;
+    margin-bottom: 12px;
+  }
 
   /* Page padding lebih kecil */
   .page-content { padding: 14px 14px 80px; } /* 80px untuk bottom nav */
@@ -960,22 +964,68 @@ tbody tr:hover { background: #f8faff; }
   .stat-value { font-size: 22px; }
 
   /* Modal full screen di mobile */
-  .modal-overlay { padding: 0; align-items: flex-end; }
+  .modal-overlay {
+    display: flex !important;
+    align-items: flex-end !important;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(4px);
+  }
   .modal {
-    border-radius: 20px 20px 0 0;
-    max-height: 92vh;
-    max-width: 100%;
-    width: 100%;
-    animation: modalSlideUp 0.3s cubic-bezier(0.4,0,0.2,1);
+    border-radius: 24px 24px 0 0 !important;
+    max-height: 90vh !important;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    margin-bottom: 0 !important;
+    border: none !important;
+  }
+  .modal::before {
+    content: "";
+    display: block;
+    width: 40px;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
+    margin: 12px auto 4px auto;
+    flex-shrink: 0;
   }
   @keyframes modalSlideUp {
     from { transform: translateY(100%); }
     to   { transform: translateY(0); }
   }
   .modal-wide { max-width: 100%; }
-  .modal-header { padding: 20px 20px 14px; }
-  .modal-body { padding: 16px 20px; }
-  .modal-footer { padding: 12px 20px 20px; }
+  .modal-header {
+    padding: 12px 20px 16px !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+    flex-shrink: 0;
+    z-index: 10;
+    background: inherit;
+  }
+  .modal-body {
+    padding: 20px !important;
+    overflow-y: auto !important;
+    flex-grow: 1;
+    -webkit-overflow-scrolling: touch;
+  }
+  .modal-footer {
+    padding: 12px 20px calc(12px + env(safe-area-inset-bottom, 0px)) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.1) !important;
+    flex-shrink: 0;
+    background: inherit;
+  }
+  #modalAbsen .modal {
+    max-height: 95vh !important; /* Sedikit lebih tinggi untuk area kamera */
+  }
+  .camera-wrap {
+    aspect-ratio: 4/3; /* Memastikan rasio kamera tetap konsisten */
+    max-height: 300px;
+    margin: 0 auto;
+  }
+  #cameraVideo {
+    object-fit: cover;
+    border-radius: 12px;
+  }
 
   /* Modal footer tombol full width di mobile */
   .modal-footer { flex-direction: column-reverse; }
