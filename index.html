@@ -1158,7 +1158,25 @@ tbody tr:hover { background: #f8faff; }
   backdrop-filter: blur(2px);
 }
 
-/* ===== JADWAL MINGGU GRID ===== */
+/* UI #1: Periode tetap di kanan di semua ukuran */
+#dashBulanTahun {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-weight: 600;
+  margin-left: auto;
+  text-align: right;
+}
+
+/* UI #2: Kurangi padding page-header di mobile */
+@media (max-width: 900px) {
+  .page-header {
+    padding-bottom: 12px;
+    margin-bottom: 16px;
+  }
+  .page-header h2 { font-size: 18px; }
+  .page-header p  { font-size: 12px; }
+}
+
 .jadwal-minggu-grid {
   display: grid;
   grid-template-columns: repeat(7, minmax(0, 1fr));
@@ -1176,6 +1194,30 @@ tbody tr:hover { background: #f8faff; }
     gap: 8px;
   }
 }
+
+/* UI #4: FAB — Floating Action Button */
+.fab {
+  position: fixed;
+  bottom: 80px;
+  right: 20px;
+  width: 56px; height: 56px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), var(--primary-light));
+  color: white;
+  border: none;
+  font-size: 22px;
+  cursor: pointer;
+  box-shadow: 0 6px 24px rgba(15,76,138,0.35);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 190;
+  transition: transform 0.2s, box-shadow 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+.fab:active { transform: scale(0.92); }
+.fab.show { display: flex; }
+@media (min-width: 901px) { .fab { display: none !important; } }
 
 /* ===== RESPONSIVE GRID UTILITIES ===== */
 .grid-2   { display:grid; grid-template-columns:1fr 1fr;    gap:20px; }
@@ -1253,6 +1295,11 @@ tbody tr:hover { background: #f8faff; }
   </div>
   <!-- MORE MENU popup -->
   <div class="bottom-nav-more" id="bottomNavMore"></div>
+
+  <!-- FAB (Floating Action Button) untuk mobile -->
+  <button class="fab" id="fabBtn" onclick="fabAction()">
+    <i class="fas fa-plus" id="fabIcon"></i>
+  </button>
   <div class="app-layout">
     <!-- SIDEBAR -->
     <aside class="sidebar" id="sidebar">
@@ -1298,7 +1345,7 @@ tbody tr:hover { background: #f8faff; }
             <i class="fas fa-bell"></i>
             <div class="notif-badge" id="notifBadge" style="display:none">0</div>
           </div>
-          <div style="font-size:13px;color:var(--text-muted)" id="currentTimeTop"></div>
+          <div style="display:none" id="currentTimeTop"></div>
         </div>
       </div>
 
@@ -1485,9 +1532,9 @@ tbody tr:hover { background: #f8faff; }
         <div class="page" id="pagePegawai">
           <div class="page-header">
             <div><h2>Manajemen Pegawai</h2><p>Kelola data pegawai perusahaan</p></div>
-            <div style="display:flex;gap:10px">
+            <div class="page-header-actions">
               <button class="btn btn-outline btn-sm" onclick="downloadTemplatePegawai()">
-                <i class="fas fa-download"></i> Template Import
+                <i class="fas fa-download"></i> Template
               </button>
               <button class="btn btn-outline btn-sm" onclick="document.getElementById('importFile').click()">
                 <i class="fas fa-file-import"></i> Import Excel
@@ -2126,8 +2173,21 @@ tbody tr:hover { background: #f8faff; }
   </div>
 </div>
 
-<!-- MODAL APPROVAL -->
-<div class="modal-overlay" id="modalApproval">
+<!-- MODAL DETAIL CUTI + TIMELINE -->
+<div class="modal-overlay" id="modalDetailCuti">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>Detail Pengajuan</h3>
+      <button class="modal-close" onclick="tutupModal('modalDetailCuti')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body" id="detailCutiBody" style="max-height:75vh;overflow-y:auto">
+      <div class="empty-state"><i class="fas fa-spinner fa-spin"></i></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-primary" onclick="tutupModal('modalDetailCuti')">Tutup</button>
+    </div>
+  </div>
+</div>
   <div class="modal" style="max-width:440px">
     <div class="modal-header">
       <h3 id="approvalTitle">Proses Pengajuan</h3>
@@ -2357,7 +2417,29 @@ function buildNav(role) {
   buildBottomNav(role, items);
 }
 
-// ── BOTTOM NAV MOBILE ───────────────────────────────────────
+// ── FAB (Floating Action Button) ────────────────────────────
+const FAB_PAGES = {
+  laporan: { icon: 'fa-plus', action: () => bukaModalLaporan() },
+  cuti:    { icon: 'fa-plus', action: () => bukaModalCuti() },
+};
+
+function updateFAB(pageId) {
+  const fab     = document.getElementById('fabBtn');
+  const fabIcon = document.getElementById('fabIcon');
+  if (!fab) return;
+  const cfg = FAB_PAGES[pageId];
+  if (cfg) {
+    fab.classList.add('show');
+    fabIcon.className = `fas ${cfg.icon}`;
+  } else {
+    fab.classList.remove('show');
+  }
+}
+
+function fabAction() {
+  const cfg = FAB_PAGES[currentPage];
+  if (cfg) cfg.action();
+}
 function buildBottomNav(role, items) {
   const navItems = items.filter(i => i.type !== 'section');
   // Tampilkan max 4 item di bottom nav, sisanya di "More"
@@ -2459,6 +2541,7 @@ function navigateTo(pageId, el) {
   closeSidebar();
   closeBottomMore();
   syncBottomNav(pageId);
+  updateFAB(pageId);
 
   // Load data
   switch (pageId) {
@@ -3065,6 +3148,17 @@ async function loadCutiList() {
       Ditolak:   'badge-danger',
     };
 
+    // Helper format tanggal ISO → dd/MM/yyyy\nHH:mm
+    function fmtDiajukan(iso) {
+      if (!iso) return '-';
+      try {
+        const d = new Date(iso);
+        const tgl = d.toLocaleDateString('id-ID', { day:'2-digit', month:'2-digit', year:'numeric' });
+        const jam = d.toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit' });
+        return `<div style="font-size:12px;line-height:1.4">${tgl}<br><span style="color:var(--text-muted);font-size:11px">${jam}</span></div>`;
+      } catch(e) { return iso; }
+    }
+
     // Helper render tabel
     function renderTabel(data, showNama, showAksi, emptyMsg) {
       if (!data.length) return `<div class="empty-state"><i class="fas fa-calendar-check"></i><p>${emptyMsg}</p></div>`;
@@ -3072,24 +3166,34 @@ async function loadCutiList() {
         ${showNama ? '<th>NIK</th><th>Nama</th>' : ''}
         <th>Jenis</th><th>Tgl Mulai</th><th>Tgl Selesai</th>
         <th>Keterangan</th><th>Lampiran</th><th>Status</th>
-        <th>Catatan Admin</th><th>Diajukan</th>
+        <th>Diajukan</th>
         ${showAksi ? '<th>Aksi</th>' : ''}
       </tr></thead><tbody>
-      ${data.map(c => `<tr>
-        ${showNama ? `<td><code style="font-size:11px">${c.nik}</code></td><td style="font-weight:600">${c.nama||'-'}</td>` : ''}
-        <td><span class="badge badge-info">${c.jenis}</span></td>
-        <td style="white-space:nowrap">${c.tanggal_mulai||'-'}</td>
-        <td style="white-space:nowrap">${c.tanggal_selesai||'-'}</td>
-        <td style="max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${(c.keterangan||'').replace(/"/g,'&quot;')}">${c.keterangan||'-'}</td>
-        <td>${c.lampiran_url ? `<a href="${c.lampiran_url}" target="_blank" class="btn btn-outline btn-sm" style="font-size:11px"><i class="fas fa-paperclip"></i> Lihat</a>` : '<span style="color:var(--text-muted);font-size:12px">-</span>'}</td>
-        <td><span class="badge ${statusBadge[c.status]||'badge-gray'}">${c.status}</span></td>
-        <td style="font-size:12px;max-width:120px">${c.catatan_admin||'-'}</td>
-        <td style="font-size:12px;white-space:nowrap">${c.diajukan_at||'-'}</td>
-        ${showAksi ? (c.status === 'Menunggu'
-          ? `<td><button class="btn btn-primary btn-sm" onclick="bukaApproval('${c.id}','${(c.nama||'').replace(/'/g,"\\'")}','${c.jenis}','${c.tanggal_mulai}','${c.tanggal_selesai}','${(c.keterangan||'').replace(/'/g,"\\'")}')"><i class="fas fa-check-circle"></i> Proses</button></td>`
-          : `<td><span style="color:var(--text-muted);font-size:12px">Selesai</span></td>`)
-        : ''}
-      </tr>`).join('')}
+      ${data.map(c => {
+        // Encode data cuti untuk modal detail
+        const cutiData = encodeURIComponent(JSON.stringify(c));
+        return `<tr>
+          ${showNama ? `<td><code style="font-size:11px">${c.nik}</code></td><td style="font-weight:600">${c.nama||'-'}</td>` : ''}
+          <td><span class="badge badge-info">${c.jenis}</span></td>
+          <td style="white-space:nowrap">${c.tanggal_mulai||'-'}</td>
+          <td style="white-space:nowrap">${c.tanggal_selesai||'-'}</td>
+          <td style="max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${(c.keterangan||'').replace(/"/g,'&quot;')}">${c.keterangan||'-'}</td>
+          <td>${c.lampiran_url ? `<a href="${c.lampiran_url}" target="_blank" class="btn btn-outline btn-sm" style="font-size:11px"><i class="fas fa-paperclip"></i> Lihat</a>` : '<span style="color:var(--text-muted);font-size:12px">-</span>'}</td>
+          <td>
+            <!-- UI #6: Badge klikable buka modal detail + timeline -->
+            <span class="badge ${statusBadge[c.status]||'badge-gray'}" style="cursor:pointer;user-select:none"
+              onclick="bukaDetailCuti('${cutiData}')"
+              title="Klik untuk lihat detail">
+              ${c.status} <i class="fas fa-info-circle" style="font-size:9px;opacity:0.7;margin-left:2px"></i>
+            </span>
+          </td>
+          <td>${fmtDiajukan(c.diajukan_at)}</td>
+          ${showAksi ? (c.status === 'Menunggu'
+            ? `<td><button class="btn btn-primary btn-sm" onclick="bukaApproval('${c.id}','${(c.nama||'').replace(/'/g,"\\'")}','${c.jenis}','${c.tanggal_mulai}','${c.tanggal_selesai}','${(c.keterangan||'').replace(/'/g,"\\'")}')"><i class="fas fa-check-circle"></i> Proses</button></td>`
+            : `<td><span style="color:var(--text-muted);font-size:12px">Selesai</span></td>`)
+          : ''}
+        </tr>`;
+      }).join('')}
       </tbody></table>`;
     }
 
@@ -3119,6 +3223,120 @@ async function loadCutiList() {
     console.error('[loadCutiList]', e);
     if (wrap) wrap.innerHTML = `<div class="empty-state"><p style="color:var(--danger)">Gagal memuat: ${e.message||e}</p></div>`;
   }
+}
+
+// ── RESET PASSWORD PEGAWAI (Admin) ─────────────────────────
+async function resetPasswordPegawai(nik, nama) {
+  if (!confirm(`Reset password ${nama} (NIK: ${nik}) ke "123456"?\n\nPegawai perlu ganti password setelah login.`)) return;
+  showLoading('Mereset password...');
+  try {
+    const res = await callServer('resetPassword', { nik, user_info: { nik: currentUser.nik, username: currentUser.username } });
+    if (res.success) showToast(`Password ${nama} berhasil direset ke 123456.`, 'success');
+    else showToast(res.message || 'Gagal reset password.', 'error');
+  } catch (e) {
+    showToast(e.message || 'Gagal reset password.', 'error');
+  } finally { hideLoading(); }
+}
+
+// ── MODAL DETAIL CUTI + TIMELINE (UI #6) ────────────────────
+function bukaDetailCuti(cutiDataEncoded) {
+  let c;
+  try { c = JSON.parse(decodeURIComponent(cutiDataEncoded)); }
+  catch(e) { showToast('Gagal membuka detail.', 'error'); return; }
+
+  const statusColor = { Menunggu: '#e6a800', Disetujui: '#059669', Ditolak: '#ef476f' };
+  const statusIcon  = { Menunggu: 'fa-clock', Disetujui: 'fa-check-circle', Ditolak: 'fa-times-circle' };
+
+  function fmtTgl(iso) {
+    if (!iso) return '-';
+    try {
+      const d = new Date(iso);
+      return d.toLocaleDateString('id-ID', { day:'2-digit', month:'long', year:'numeric' });
+    } catch(e) { return iso; }
+  }
+  function fmtWaktu(iso) {
+    if (!iso) return '';
+    try {
+      const d = new Date(iso);
+      return d.toLocaleDateString('id-ID', { day:'2-digit', month:'2-digit', year:'numeric' }) +
+             ' ' + d.toLocaleTimeString('id-ID', { hour:'2-digit', minute:'2-digit' });
+    } catch(e) { return iso; }
+  }
+
+  // Hitung jumlah hari
+  let jumlahHari = '-';
+  try {
+    const ms = new Date(c.tanggal_selesai) - new Date(c.tanggal_mulai);
+    jumlahHari = Math.floor(ms / 86400000) + 1 + ' hari';
+  } catch(e) {}
+
+  // Timeline steps
+  const steps = [
+    {
+      icon: 'fa-paper-plane', color: '#0f4c8a',
+      judul: 'Pengajuan Dibuat',
+      waktu: fmtWaktu(c.diajukan_at),
+      sub: `Diajukan oleh ${c.nama || 'Pegawai'}`,
+      done: true,
+    },
+    {
+      icon: 'fa-eye', color: '#e6a800',
+      judul: 'Menunggu Persetujuan',
+      waktu: c.status !== 'Menunggu' ? '' : 'Saat ini',
+      sub: 'Pengajuan sedang direview oleh Admin',
+      done: true,
+      active: c.status === 'Menunggu',
+    },
+    {
+      icon: statusIcon[c.status] || 'fa-question-circle',
+      color: statusColor[c.status] || '#6b7a99',
+      judul: c.status === 'Menunggu' ? 'Keputusan Admin' : c.status,
+      waktu: c.diproses_at ? fmtWaktu(c.diproses_at) : '',
+      sub: c.catatan_admin ? `Catatan: ${c.catatan_admin}` : (c.status === 'Menunggu' ? 'Belum diproses' : `Diproses oleh Admin`),
+      done: c.status !== 'Menunggu',
+      active: c.status !== 'Menunggu',
+    },
+  ];
+
+  const timelineHTML = steps.map((s, i) => `
+    <div style="display:flex;gap:16px;position:relative;padding-bottom:${i < steps.length-1 ? '24px' : '0'}">
+      ${i < steps.length-1 ? `<div style="position:absolute;left:19px;top:36px;width:2px;height:calc(100% - 12px);background:${s.done && steps[i+1].done ? s.color+'40' : 'var(--border)'}"></div>` : ''}
+      <div style="flex-shrink:0;width:40px;height:40px;border-radius:50%;background:${s.done ? s.color : 'var(--border)'};display:flex;align-items:center;justify-content:center;${s.active ? 'box-shadow:0 0 0 4px '+s.color+'25' : ''}">
+        <i class="fas ${s.icon}" style="color:white;font-size:15px"></i>
+      </div>
+      <div style="padding-top:8px;min-width:0">
+        <div style="font-weight:700;font-size:14px;color:${s.done ? 'var(--text)' : 'var(--text-muted)'}">${s.judul}</div>
+        ${s.waktu ? `<div style="font-size:11px;color:var(--text-muted);margin-top:2px">${s.waktu}</div>` : ''}
+        <div style="font-size:12px;color:var(--text-muted);margin-top:4px">${s.sub}</div>
+      </div>
+    </div>`).join('');
+
+  document.getElementById('detailCutiBody').innerHTML = `
+    <div style="display:grid;gap:10px;margin-bottom:24px">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div style="background:var(--bg);border-radius:10px;padding:12px">
+          <div style="font-size:11px;color:var(--text-muted);font-weight:600;margin-bottom:4px">JENIS</div>
+          <div style="font-weight:700">${c.jenis}</div>
+        </div>
+        <div style="background:var(--bg);border-radius:10px;padding:12px">
+          <div style="font-size:11px;color:var(--text-muted);font-weight:600;margin-bottom:4px">DURASI</div>
+          <div style="font-weight:700">${jumlahHari}</div>
+        </div>
+      </div>
+      <div style="background:var(--bg);border-radius:10px;padding:12px">
+        <div style="font-size:11px;color:var(--text-muted);font-weight:600;margin-bottom:4px">PERIODE</div>
+        <div style="font-weight:600">${fmtTgl(c.tanggal_mulai)} — ${fmtTgl(c.tanggal_selesai)}</div>
+      </div>
+      <div style="background:var(--bg);border-radius:10px;padding:12px">
+        <div style="font-size:11px;color:var(--text-muted);font-weight:600;margin-bottom:4px">KETERANGAN</div>
+        <div style="font-size:13px">${c.keterangan || '-'}</div>
+      </div>
+      ${c.lampiran_url ? `<a href="${c.lampiran_url}" target="_blank" class="btn btn-outline" style="justify-content:center"><i class="fas fa-paperclip"></i> Lihat Lampiran</a>` : ''}
+    </div>
+    <div style="font-size:13px;font-weight:700;color:var(--text-muted);letter-spacing:0.5px;text-transform:uppercase;margin-bottom:16px">Timeline Proses</div>
+    <div>${timelineHTML}</div>`;
+
+  bukaModal('modalDetailCuti');
 }
 
 function switchCutiTab(tab, el) {
@@ -3351,8 +3569,9 @@ function renderPegawaiTable() {
     <td><span class="badge badge-info">${p.tipe_waktu || '-'}</span></td>
     <td><span class="badge ${p.status === 'Aktif' ? 'badge-success' : 'badge-gray'}">${p.status}</span></td>
     <td>
-      <div style="display:flex;gap:6px">
+      <div style="display:flex;gap:6px;flex-wrap:wrap">
         <button class="btn btn-outline btn-sm btn-icon" title="Edit" onclick='editPegawai(${JSON.stringify(p)})'><i class="fas fa-edit"></i></button>
+        <button class="btn btn-outline btn-sm btn-icon" title="Reset Password ke 123456" onclick="resetPasswordPegawai('${p.nik}','${p.nama}')"><i class="fas fa-key"></i></button>
         <button class="btn btn-danger btn-sm btn-icon" title="Hapus" onclick="hapusPegawai('${p.nik}','${p.nama}')"><i class="fas fa-trash"></i></button>
       </div>
     </td>
@@ -3959,28 +4178,34 @@ async function loadLog() {
   const wrap = document.getElementById('logTableWrap');
   if (wrap) wrap.innerHTML = '<div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Memuat log...</p></div>';
   try {
-    // FIX: kirim role agar backend tahu siapa yang request
     const res = await callServer('getLogAktivitas', { nik: currentUser.nik, role: currentUser.role });
-    if (!res.success) { wrap.innerHTML = `<div class="empty-state"><p>Error: ${res.message}</p></div>`; return; }
-    if (res.data.length === 0) {
+    if (!res.success) { wrap.innerHTML = `<div class="empty-state"><p style="color:var(--danger)">${res.message}</p></div>`; return; }
+    if (!res.data || res.data.length === 0) {
       wrap.innerHTML = '<div class="empty-state"><i class="fas fa-history"></i><p>Belum ada log aktivitas</p></div>'; return;
     }
     wrap.innerHTML = `<table><thead><tr>
       <th>Waktu</th><th>NIK</th><th>Username</th><th>Aksi</th><th>Detail</th>
     </tr></thead><tbody>
     ${res.data.map(l => {
+      // BUG #2 FIX: Supabase pakai snake_case bukan PascalCase
       let tStr = '-';
-      try { tStr = l['Timestamp'] ? new Date(l['Timestamp']).toLocaleString('id-ID') : '-'; } catch(e) {}
+      try {
+        const ts = l.timestamp || l.Timestamp;
+        if (ts) tStr = new Date(ts).toLocaleString('id-ID', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' });
+      } catch(e) {}
       return `<tr>
         <td style="font-size:12px;white-space:nowrap">${tStr}</td>
-        <td><code style="font-size:11px">${l['NIK']||'-'}</code></td>
-        <td>${l['Username']||'-'}</td>
-        <td><span class="badge badge-info" style="font-size:10px">${l['Aksi']||'-'}</span></td>
-        <td style="font-size:12px;max-width:280px;word-break:break-word">${l['Detail']||'-'}</td>
+        <td><code style="font-size:11px">${l.nik || l.NIK || '-'}</code></td>
+        <td>${l.username || l.Username || '-'}</td>
+        <td><span class="badge badge-info" style="font-size:10px">${l.aksi || l.Aksi || '-'}</span></td>
+        <td style="font-size:12px;max-width:280px;word-break:break-word">${l.detail || l.Detail || '-'}</td>
       </tr>`;
     }).join('')}
     </tbody></table>`;
-  } catch (e) { wrap.innerHTML = `<div class="empty-state"><p>Error: ${e}</p></div>`; }
+  } catch (e) {
+    console.error('[loadLog]', e);
+    wrap.innerHTML = `<div class="empty-state"><p style="color:var(--danger)">Gagal memuat log: ${e.message||e}</p></div>`;
+  }
 }
 
 // ============================================================
@@ -4196,12 +4421,14 @@ function switchJadwalTab(tab, el) {
   const target = document.getElementById(tabMap[tab]);
   if (target) target.style.display = 'block';
   if (tab === 'riwayat') {
-    const today = new Date().toISOString().split('T')[0];
+    const today   = new Date().toISOString().split('T')[0];
     const weekAgo = new Date(Date.now() - 7*86400000).toISOString().split('T')[0];
     const s = document.getElementById('riwayatTglMulai');
     const e = document.getElementById('riwayatTglSelesai');
     if (s && !s.value) s.value = weekAgo;
     if (e && !e.value) e.value = today;
+    // BUG #1 FIX: load otomatis saat tab riwayat dibuka
+    loadRiwayatJadwal();
   }
 }
 
@@ -4392,38 +4619,45 @@ async function previewDanSubmitMasal() {
 }
 
 async function loadRiwayatJadwal() {
-  const nik       = document.getElementById('riwayatNIKFilter').value;
-  const tglMulai  = document.getElementById('riwayatTglMulai').value;
-  const tglSelesai = document.getElementById('riwayatTglSelesai').value;
-  const wrap = document.getElementById('riwayatJadwalTable');
+  const nik        = document.getElementById('riwayatNIKFilter')?.value || '';
+  const tglMulai   = document.getElementById('riwayatTglMulai')?.value  || '';
+  const tglSelesai = document.getElementById('riwayatTglSelesai')?.value || '';
+  const wrap       = document.getElementById('riwayatJadwalTable');
+  if (!wrap) return;
   wrap.innerHTML = '<div class="empty-state"><i class="fas fa-spinner fa-spin"></i><p>Memuat...</p></div>';
   try {
-    const res = await callServer('getJadwalShiftList', { nik: nik || null, role: currentUser.role, tanggal_mulai: tglMulai, tanggal_selesai: tglSelesai });
-    if (!res.success || res.data.length === 0) {
-      wrap.innerHTML = '<div class="empty-state"><i class="fas fa-calendar" style="opacity:0.2"></i><p>Tidak ada data jadwal</p></div>'; return;
+    const res = await callServer('getJadwalShiftList', {
+      nik: nik || null, role: currentUser.role,
+      tanggal_mulai: tglMulai, tanggal_selesai: tglSelesai
+    });
+    if (!res.success) { wrap.innerHTML = `<div class="empty-state"><p style="color:var(--danger)">${res.message}</p></div>`; return; }
+    if (!res.data || res.data.length === 0) {
+      wrap.innerHTML = '<div class="empty-state"><i class="fas fa-calendar" style="opacity:0.2"></i><p>Tidak ada data jadwal pada periode ini</p></div>'; return;
     }
     const nama_hariArr = ['Minggu','Senin','Selasa','Rabu','Kamis','Jumat','Sabtu'];
     wrap.innerHTML = `<table><thead><tr>
       <th>NIK</th><th>Nama</th><th>Tanggal</th><th>Hari</th><th>Nama Shift</th><th>Jam Masuk</th><th>Jam Pulang</th><th>Aksi</th>
     </tr></thead><tbody>
     ${res.data.map(j => {
-      const nama_hari = nama_hariArr[new Date(j.tanggal).getDay()];
-      const cls = j.nama_shift.toLowerCase().includes('pagi') ? 'badge-warning'
-        : j.nama_shift.toLowerCase().includes('sore') ? 'badge-info'
-        : j.nama_shift.toLowerCase().includes('malam') ? 'badge-gray' : 'badge-success';
+      const nama_hari = nama_hariArr[new Date(j.tanggal + 'T00:00:00').getDay()];
+      const nm  = (j.nama_shift || '').toLowerCase();
+      const cls = nm.includes('pagi') ? 'badge-warning' : nm.includes('sore') ? 'badge-info' : nm.includes('malam') ? 'badge-gray' : 'badge-success';
       return `<tr>
         <td><code style="font-size:11px">${j.nik}</code></td>
-        <td>${j.nama}</td>
+        <td>${j.nama || '-'}</td>
         <td>${j.tanggal}</td>
         <td style="font-weight:600">${nama_hari}</td>
-        <td><span class="badge ${cls}">${j.nama_shift}</span></td>
-        <td><strong>${j.jam_masuk}</strong></td>
-        <td>${j.jam_pulang}</td>
+        <td><span class="badge ${cls}">${j.nama_shift || '-'}</span></td>
+        <td><strong>${j.jam_masuk || '-'}</strong></td>
+        <td>${j.jam_pulang || '-'}</td>
         <td><button class="btn btn-danger btn-sm btn-icon" onclick="hapusJadwal('${j.id}')" title="Hapus"><i class="fas fa-trash"></i></button></td>
       </tr>`;
     }).join('')}
     </tbody></table>`;
-  } catch (e) {}
+  } catch (e) {
+    console.error('[loadRiwayatJadwal]', e);
+    wrap.innerHTML = `<div class="empty-state"><p style="color:var(--danger)">Gagal memuat: ${e.message||e}</p></div>`;
+  }
 }
 
 async function hapusJadwal(id) {
