@@ -974,7 +974,9 @@ tbody tr:hover { background: #f8faff; }
   }
   .modal {
     border-radius: 24px 24px 0 0 !important;
-    max-height: 70vh !important;
+    position: relative;
+    padding-top: 24px !important;
+    max-height: 80vh !important;
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -984,13 +986,16 @@ tbody tr:hover { background: #f8faff; }
   }
   .modal::before {
     content: "";
-    display: block;
-    width: 40px;
-    height: 4px;
-    background: rgba(255, 255, 255, 0.3);
+    position: absolute;
+    top: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 45px;
+    height: 5px;
+    background-color: #e0e0e0;
     border-radius: 10px;
-    margin: 12px auto 4px auto;
-    flex-shrink: 0;
+    z-index: 100;
+    display: block !important;
   }
   @keyframes modalSlideUp {
     from { transform: translateY(100%); }
@@ -998,11 +1003,14 @@ tbody tr:hover { background: #f8faff; }
   }
   .modal-wide { max-width: 100%; }
   .modal-header {
-    padding: 12px 20px 16px !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
-    flex-shrink: 0;
-    z-index: 10;
-    background: inherit;
+  padding: 8px 20px 16px !important; 
+  background: inherit !important;
+  border-bottom: 1px solid var(--border) !important; 
+  flex-shrink: 0;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   }
   .modal-body {
     padding: 20px !important;
