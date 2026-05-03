@@ -4785,57 +4785,66 @@ async function importJadwal(input) {
 let startY = 0;
 let currentY = 0;
 let isDragging = false;
+let activeModal = null;
+let activeOverlay = null;
 
 document.addEventListener('touchstart', (e) => {
-  // Hanya aktifkan geser jika user menyentuh Handle atau Header modal
-  if (e.target.classList.contains('modal-header') || e.target.closest('.modal-header') || e.target.matches('.modal::before')) {
-    startY = e.touches[0].clientY;
-    isDragging = true;
-    
+    // 1. Cari modal terdekat dari target sentuhan
     const modal = e.target.closest('.modal');
-    modal.style.transition = 'none';
-  }
+    if (!modal) return;
+    const overlay = modal.closest('.modal-overlay');
+    const isHeader = e.target.classList.contains('modal-header') || e.target.closest('.modal-header');
+    const rect = modal.getBoundingClientRect();
+    const touchYInModal = e.touches[0].clientY - rect.top;
+    const isHandleArea = touchYInModal >= 0 && touchYInModal <= 35;
+
+    if (isHeader || isHandleArea) {
+        startY = e.touches[0].clientY;
+        isDragging = true;
+        activeModal = modal;
+        activeOverlay = overlay;
+        
+        activeModal.style.transition = 'none';
+    }
 }, { passive: true });
 
 document.addEventListener('touchmove', (e) => {
-  if (!isDragging) return;
+    if (!isDragging || !activeModal) return;
 
-  const modal = document.querySelector('.modal-overlay[style*="display: block"] .modal') || 
-                document.querySelector('.modal-overlay.show .modal');
-  
-  if (!modal) return;
+    currentY = e.touches[0].clientY - startY;
 
-  currentY = e.touches[0].clientY - startY;
+    if (currentY > 0) {
+        if (e.cancelable) e.preventDefault(); 
+        activeModal.style.transform = `translateY(${currentY}px)`;
+    }
+}, { passive: false });
 
-  if (currentY > 0) {
-    modal.style.transform = `translateY(${currentY}px)`;
-  }
-}, { passive: true });
+document.addEventListener('touchend', () => {
+    if (!isDragging || !activeModal) return;
+    
+    isDragging = false;
+    activeModal.style.transition = 'transform 0.3s cubic-bezier(0.4, 0, 0.2, 1)';
 
-document.addEventListener('touchend', (e) => {
-  if (!isDragging) return;
-  isDragging = false;
-
-  const modalOverlay = e.target.closest('.modal-overlay');
-  const modal = modalOverlay.querySelector('.modal');
-  
-  modal.style.transition = 'transform 0.3s ease';
-
-  if (currentY > 150) {
-    modal.style.transform = 'translateY(100%)';
-    setTimeout(() => {
-      if (modalOverlay.id === 'modalAbsen') {
-        tutupModalAbsen();
-      } else {
-        tutupModal(modalOverlay.id);
-      }
-      modal.style.transform = ''; // Reset untuk pemakaian berikutnya
-    }, 300);
-  } else {
-    // Kembalikan ke posisi semula jika tarikan kurang jauh
-    modal.style.transform = 'translateY(0)';
-  }
-  currentY = 0;
+    if (currentY > 150) {
+        activeModal.style.transform = 'translateY(100%)';
+        
+        const overlayId = activeOverlay ? activeOverlay.id : null;
+        
+        setTimeout(() => {
+            if (overlayId === 'modalAbsen') {
+                if (typeof tutupModalAbsen === 'function') tutupModalAbsen();
+            } else if (overlayId) {
+                if (typeof tutupModal === 'function') tutupModal(overlayId);
+            }
+            
+            activeModal.style.transform = '';
+            activeModal = null;
+            activeOverlay = null;
+        }, 300);
+    } else {
+        activeModal.style.transform = 'translateY(0)';
+    }
+    currentY = 0;
 });
 </script>
 </body>
