@@ -983,6 +983,9 @@ tbody tr:hover { background: #f8faff; }
     margin-bottom: 0 !important;
     border: none !important;
     animation: modalSlideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: transform 0.3s cubic-bezier(0.15, 0, 0.15, 1);
+    touch-action: none;
+  }
   }
   .modal::before {
     content: "";
@@ -4775,6 +4778,65 @@ async function importJadwal(input) {
   };
   reader.readAsArrayBuffer(file);
 }
+
+  // ============================================================
+// BOTTOM SHEET DRAG-TO-DISMISS LOGIC
+// ============================================================
+let startY = 0;
+let currentY = 0;
+let isDragging = false;
+
+document.addEventListener('touchstart', (e) => {
+  // Hanya aktifkan geser jika user menyentuh Handle atau Header modal
+  if (e.target.classList.contains('modal-header') || e.target.closest('.modal-header') || e.target.matches('.modal::before')) {
+    startY = e.touches[0].clientY;
+    isDragging = true;
+    
+    const modal = e.target.closest('.modal');
+    modal.style.transition = 'none';
+  }
+}, { passive: true });
+
+document.addEventListener('touchmove', (e) => {
+  if (!isDragging) return;
+
+  const modal = document.querySelector('.modal-overlay[style*="display: block"] .modal') || 
+                document.querySelector('.modal-overlay.show .modal');
+  
+  if (!modal) return;
+
+  currentY = e.touches[0].clientY - startY;
+
+  if (currentY > 0) {
+    modal.style.transform = `translateY(${currentY}px)`;
+  }
+}, { passive: true });
+
+document.addEventListener('touchend', (e) => {
+  if (!isDragging) return;
+  isDragging = false;
+
+  const modalOverlay = e.target.closest('.modal-overlay');
+  const modal = modalOverlay.querySelector('.modal');
+  
+  modal.style.transition = 'transform 0.3s ease';
+
+  if (currentY > 150) {
+    modal.style.transform = 'translateY(100%)';
+    setTimeout(() => {
+      if (modalOverlay.id === 'modalAbsen') {
+        tutupModalAbsen();
+      } else {
+        tutupModal(modalOverlay.id);
+      }
+      modal.style.transform = ''; // Reset untuk pemakaian berikutnya
+    }, 300);
+  } else {
+    // Kembalikan ke posisi semula jika tarikan kurang jauh
+    modal.style.transform = 'translateY(0)';
+  }
+  currentY = 0;
+});
 </script>
 </body>
 </html>
