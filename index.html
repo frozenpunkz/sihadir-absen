@@ -935,7 +935,7 @@ tbody tr:hover { background: #f8faff; }
 
   /* Hamburger tampil */
   /* Hamburger hanya tampil di tablet - mobile punya bottom nav */
-  .hamburger { display: flex; }
+  .hamburger { display: none !important; }
 
   /* Form grid 1 kolom */
   .form-row, .form-row-3 { grid-template-columns: 1fr; }
@@ -1121,7 +1121,6 @@ tbody tr:hover { background: #f8faff; }
   /* Badge di tabel */
   .badge { font-size: 10px; padding: 2px 7px; }
   /* BUG #3 FIX: Sembunyikan hamburger di mobile kecil karena sudah ada bottom nav */
-  .hamburger { display: none !important; }
 }
 
 /* ── Landscape Mobile (tinggi < 500px) ── */
@@ -1155,6 +1154,7 @@ tbody tr:hover { background: #f8faff; }
   .bottom-nav { display: none !important; }
   .bottom-nav-more { display: none !important; }
   .page-content { padding-bottom: 28px; }
+  .hamburger { display: flex; }
 }
 
 /* ===== TAB ===== */
