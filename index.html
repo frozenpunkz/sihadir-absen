@@ -4509,7 +4509,7 @@ function switchJadwalTab(tab, el) {
     const t = document.getElementById(id);
     if (t) t.style.display = 'none';
   });
-  document.querySelectorAll('#jadwalTabs .tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('#jadwalTabsNav .tab').forEach(t => t.classList.remove('active'));
   if (el) el.classList.add('active');
   const tabMap = { mingguIni:'tabMingguIni', aturJadwal:'tabAturJadwal', riwayat:'tabRiwayat' };
   const target = document.getElementById(tabMap[tab]);
@@ -4610,7 +4610,7 @@ async function submitJadwalSatu() {
     if (res.success) {
       showToast(res.message, 'success');
       document.getElementById('jadwalNIKFilter').value = nik;
-      switchJadwalTab('mingguIni', document.querySelectorAll('#jadwalTabs .tab')[0]);
+      switchJadwalTab('mingguIni', document.querySelectorAll('#jadwalTabsNav .tab')[0]);
       loadJadwalMingguIni(nik);
     } else showToast(res.message, 'error');
   } catch (e) { showToast('Error', 'error'); }
@@ -4705,7 +4705,7 @@ async function previewDanSubmitMasal() {
     if (res.success) {
       showToast(res.message, 'success');
       document.getElementById('jadwalNIKFilter').value = nik;
-      switchJadwalTab('mingguIni', document.querySelectorAll('#jadwalTabs .tab')[0]);
+      switchJadwalTab('mingguIni', document.querySelectorAll('#jadwalTabsNav .tab')[0]);
       loadJadwalMingguIni(nik);
     } else showToast(res.message, 'error');
   } catch (e) { showToast('Error', 'error'); }
