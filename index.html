@@ -4507,7 +4507,7 @@ function switchJadwalTab(tab, el) {
     if (t) t.style.display = 'none';
   });
   document.querySelectorAll('#jadwalTabs .tab').forEach(t => t.classList.remove('active'));
-  el.classList.add('active');
+  if (el) el.classList.add('active');
   const tabMap = { mingguIni:'tabMingguIni', aturJadwal:'tabAturJadwal', riwayat:'tabRiwayat' };
   const target = document.getElementById(tabMap[tab]);
   if (target) target.style.display = 'block';
