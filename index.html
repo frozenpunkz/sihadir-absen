@@ -1120,7 +1120,6 @@ tbody tr:hover { background: #f8faff; }
 
   /* Badge di tabel */
   .badge { font-size: 10px; padding: 2px 7px; }
-  /* BUG #3 FIX: Sembunyikan hamburger di mobile kecil karena sudah ada bottom nav */
 }
 
 /* ── Landscape Mobile (tinggi < 500px) ── */
@@ -1155,6 +1154,17 @@ tbody tr:hover { background: #f8faff; }
   .bottom-nav-more { display: none !important; }
   .page-content { padding-bottom: 28px; }
   .hamburger { display: flex; }
+  /* Sidebar slide dari kiri */
+  .sidebar {
+    transform: translateX(-100%);
+    width: 280px;
+    z-index: 300;
+    transition: transform 0.28s cubic-bezier(0.4,0,0.2,1);
+  }
+  .sidebar.open {
+    transform: translateX(0);
+    box-shadow: 0 0 80px rgba(0,0,0,0.35);
+  }
 }
 
 /* ===== TAB ===== */
