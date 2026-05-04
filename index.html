@@ -4428,7 +4428,10 @@ async function loadJadwalShiftPage() {
 
   if (!isAdmin) {
     // Pegawai: sembunyikan seluruh tab navigation
-    if (jadwalTabsNav)  jadwalTabsNav.style.display  = 'none';
+    if (jadwalTabsNav) {
+    jadwalTabsNav.style.display  = 'none';
+    jadwalTabsNav.style.marginBottom = '0';
+    }
     if (headerActions)  headerActions.style.display  = 'none';
     if (tabAturBtn)     tabAturBtn.style.display      = 'none';
     if (tabRiwayatBtn)  tabRiwayatBtn.style.display   = 'none';
