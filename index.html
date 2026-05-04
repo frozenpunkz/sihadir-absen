@@ -1792,7 +1792,7 @@ tbody tr:hover { background: #f8faff; }
             </div>
           </div>
           <div style="display:flex;gap:16px;margin-bottom:20px;flex-wrap:wrap">
-            <div class="tabs" id="jadwalTabs">
+            <div class="tabs" id="jadwalTabsNav">
               <button class="tab active" onclick="switchJadwalTab('mingguIni', this)">📅 Jadwal Minggu Ini</button>
               <button class="tab" id="tabAturBtn" onclick="switchJadwalTab('aturJadwal', this)">⚙️ Atur Jadwal</button>
               <button class="tab" onclick="switchJadwalTab('riwayat', this)">📋 Riwayat Jadwal</button>
@@ -4419,17 +4419,32 @@ async function loadJadwalShiftPage() {
   await Promise.all([loadShiftCache(), loadPegawaiCache()]);
   populateJadwalSelects();
 
-  // Sembunyikan tombol header & tab Atur Jadwal untuk Pegawai biasa
-  const isAdmin = currentUser.role === 'Admin' || currentUser.role === 'HRD' || currentUser.role === 'Manajer';
+  const isAdmin = ['Admin', 'HRD', 'Manajer'].includes(currentUser.role);
+
   const headerActions = document.getElementById('jadwalHeaderActions');
-  const tabAturBtn = document.getElementById('tabAturBtn');
+  const tabAturBtn    = document.getElementById('tabAturBtn');
+  const tabRiwayatBtn = document.getElementById('tabRiwayatBtn');
+  const jadwalTabsNav = document.getElementById('jadwalTabsNav');
+
   if (!isAdmin) {
-    if (headerActions) headerActions.style.display = 'none';
-    if (tabAturBtn) tabAturBtn.style.display = 'none';
+    // Pegawai: sembunyikan seluruh tab navigation
+    if (jadwalTabsNav)  jadwalTabsNav.style.display  = 'none';
+    if (headerActions)  headerActions.style.display  = 'none';
+    if (tabAturBtn)     tabAturBtn.style.display      = 'none';
+    if (tabRiwayatBtn)  tabRiwayatBtn.style.display   = 'none';
+
     const filterCard = document.getElementById('jadwalFilterCard');
     if (filterCard) filterCard.style.display = 'none';
+
+    // Langsung tampilkan tab Jadwal Minggu Ini tanpa navigasi
+    switchJadwalTab('mingguIni', null);
     await loadJadwalMingguIni(currentUser.nik);
   } else {
+    // Admin/HRD/Manajer: tampilkan semua tab seperti biasa
+    if (jadwalTabsNav) jadwalTabsNav.style.display = '';
+    if (headerActions) headerActions.style.display = '';
+
+    switchJadwalTab('mingguIni', document.getElementById('tabMingguIni'));
     await loadJadwalMingguIni();
   }
 }
