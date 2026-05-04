@@ -1153,19 +1153,6 @@ tbody tr:hover { background: #f8faff; }
   .bottom-nav { display: none !important; }
   .bottom-nav-more { display: none !important; }
   .page-content { padding-bottom: 28px; }
-  .hamburger { display: flex; }
-  /* Sidebar slide dari kiri */
-  .sidebar {
-    transform: translateX(-100%);
-    width: 280px;
-    z-index: 300;
-    transition: transform 0.28s cubic-bezier(0.4,0,0.2,1);
-  }
-  .sidebar.open {
-    transform: translateX(0);
-    box-shadow: 0 0 80px rgba(0,0,0,0.35);
-  }
-}
 
 /* ===== TAB ===== */
 .tabs { display: flex; gap: 2px; background: var(--bg); border-radius: var(--radius-sm); padding: 3px; }
