@@ -932,6 +932,12 @@ tbody tr:hover { background: #f8faff; }
 
   /* Main content full width */
   .main-content { margin-left: 0; }
+  .main-content .notif-panel { 
+    right: 16px; 
+    left: 16px; 
+    width: calc(100% - 32px); 
+    top: 60px; 
+  }
 
   /* Hamburger tampil */
   /* Hamburger hanya tampil di tablet - mobile punya bottom nav */
@@ -985,7 +991,6 @@ tbody tr:hover { background: #f8faff; }
     animation: modalSlideUp 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     transition: transform 0.3s cubic-bezier(0.15, 0, 0.15, 1);
     touch-action: none;
-  }
   }
   .modal::before {
     content: "";
@@ -1058,9 +1063,6 @@ tbody tr:hover { background: #f8faff; }
     align-items: center;
   }
   .toast { min-width: unset; max-width: 100%; width: 100%; }
-
-  /* Notif panel full width */
-  .notif-panel { left: 8px; right: 8px; width: auto; top: 60px; }
 
   /* Page header stack vertikal */
   .page-header { flex-direction: column; align-items: flex-start; gap: 10px; }
@@ -1182,7 +1184,7 @@ tbody tr:hover { background: #f8faff; }
   border-radius: var(--radius);
   box-shadow: var(--shadow-lg);
   border: 1px solid var(--border);
-  z-index: 200;
+  z-index: 1000;
   display: none;
   overflow: hidden;
 }
