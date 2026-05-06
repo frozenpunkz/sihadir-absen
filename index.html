@@ -2303,15 +2303,25 @@ const WORKER_URL = 'https://sihadir-proxy.techrover.workers.dev'; // ← GANTI
 // Menggantikan google.script.run yang hanya bisa di GAS
 // ============================================================
 async function callServer(action, payload = {}) {
+  // FIX #2: sertakan JWT token di setiap request (kecuali login)
+  const headers = { 'Content-Type': 'application/json' };
+  if (action !== 'login') {
+    const token = getSessionToken();
+    if (token) headers['Authorization'] = 'Bearer ' + token;
+  }
   const res = await fetch(WORKER_URL, {
     method:  'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers,
     body:    JSON.stringify({ action, payload }),
   });
-  // BUG #6 FIX: selalu parse JSON dulu, baru throw jika tidak sukses HTTP
   const data = await res.json().catch(() => ({ success: false, message: 'Response bukan JSON.' }));
   if (!res.ok) {
-    // Gunakan pesan dari JSON jika ada, bukan raw HTTP error
+    // Jika 401, paksa logout
+    if (res.status === 401 && action !== 'login') {
+      clearSession();
+      showToast('Sesi telah berakhir. Silakan login kembali.', 'warning');
+      setTimeout(() => location.reload(), 1500);
+    }
     throw new Error(data.message || `Terjadi kesalahan server (${res.status}).`);
   }
   return data;
@@ -2633,16 +2643,23 @@ function navigateTo(pageId, el) {
 // ============================================================
 const SESSION_KEY = 'sihadir_session';
   
-function saveSession(user) {
-  const session = { 
-    user, 
-    loginAt: new Date().toISOString() 
-  };
-  try { 
-    localStorage.setItem(SESSION_KEY, JSON.stringify(session)); 
+function saveSession(user, token) {
+  // FIX #2: simpan token bersama data user dan expiry 8 jam
+  const expiry = Date.now() + 8 * 60 * 60 * 1000;
+  const session = { user, token: token || getSessionToken(), loginAt: new Date().toISOString(), expiry };
+  try {
+    localStorage.setItem(SESSION_KEY, JSON.stringify(session));
   } catch(e) {
-    console.error("Gagal menyimpan sesi:", e);
+    console.error('Gagal menyimpan sesi:', e);
   }
+}
+
+function getSessionToken() {
+  try {
+    const raw = localStorage.getItem(SESSION_KEY);
+    if (!raw) return null;
+    return JSON.parse(raw).token || null;
+  } catch(e) { return null; }
 }
 
 function loadSession() {
@@ -2650,9 +2667,14 @@ function loadSession() {
     const raw = localStorage.getItem(SESSION_KEY);
     if (!raw) return null;
     const session = JSON.parse(raw);
+    // FIX #2: cek expiry — 8 jam sesuai JWT di worker
+    if (session.expiry && Date.now() > session.expiry) {
+      localStorage.removeItem(SESSION_KEY);
+      return null;
+    }
     return session.user;
-  } catch(e) { 
-    return null; 
+  } catch(e) {
+    return null;
   }
 }
 
@@ -2700,12 +2722,11 @@ async function doLogin() {
     const result = await callServer('login', { username, password });
     if (result.success) {
       currentUser = result.data;
-      saveSession(currentUser); 
-      
+      // FIX #2: simpan token JWT yang dikembalikan worker
+      saveSession(currentUser, result.token || null);
       document.getElementById('loginPage').style.display = 'none';
       document.getElementById('mainApp').style.display = 'block';
-  
-      initApp(); 
+      initApp();
     } else {
       errEl.textContent = result.message;
       errEl.style.display = 'block';
@@ -4325,7 +4346,8 @@ async function gantiPassword() {
   if (neu.length < 6) { showToast('Password baru minimal 6 karakter', 'warning'); return; }
   showLoading();
   try {
-    const res = await callServer('changePassword', { nik: currentUser.nik, oldPassword: old, newPassword: neu });
+    // FIX #1: snake_case sesuai worker (old_password, new_password)
+    const res = await callServer('changePassword', { nik: currentUser.nik, old_password: old, new_password: neu });
     if (res.success) { showToast(res.message, 'success'); document.getElementById('oldPassword').value = ''; document.getElementById('newPassword').value = ''; }
     else showToast(res.message, 'error');
   } catch (e) {} finally { hideLoading(); }
@@ -4356,7 +4378,7 @@ function renderNotifList() {
     <div class="notif-item ${n.is_read ? '' : 'unread'}" onclick="readNotif('${n.id}')">
       <div class="notif-title">${n.judul}</div>
       <div class="notif-msg">${n.pesan}</div>
-      <div class="notif-time">${n.createdAt}</div>
+      <div class="notif-time">${n.created_at ? new Date(n.created_at).toLocaleString('id-ID',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'}) : ''}</div>
     </div>`).join('');
 }
 
@@ -4394,18 +4416,15 @@ window.onload = function() {
     }
   });
 
-  // Cek sesi tersimpan
+  // FIX #2: cek sesi — loadSession sudah validasi expiry 8 jam
   const savedUser = loadSession();
   if (savedUser) {
     currentUser = savedUser;
     document.getElementById('loginPage').style.display = 'none';
     document.getElementById('mainApp').style.display = 'block';
     initApp();
-    startSessionTimer();
     showToast('Selamat datang kembali, ' + (savedUser.nama || savedUser.username) + '!', 'success');
   }
-  // Jika ingin auto-setup: uncomment baris di bawah (hanya sekali)
-  // callServer('setupApplication').then(r => console.log(r));
 };
 
 // ============================================================
